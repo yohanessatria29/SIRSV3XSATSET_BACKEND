@@ -1,5 +1,6 @@
 import { users, users_sso, insert, show } from "../models/UserModel.js";
 import axios from "axios";
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jsonWebToken from "jsonwebtoken";
 import Joi from "joi";
@@ -269,15 +270,18 @@ export const login = async (req, res) => {
 
 export const loginSSO = async (req, res) => {
   const token = req.query.token;
-  //   console.log(token);
-
   try {
+    // const response = await axios.get(
+    //   "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+    //     token +
+    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
+    // );
+
     const response = await axios.get(
-      "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+      "http://192.168.50.86/sso/v1/token?value=" +
         token +
         "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
     );
-
     const email_sso = response.data.data.email;
 
     users_sso
@@ -312,7 +316,9 @@ export const loginSSO = async (req, res) => {
           satKerId: results[0].rs_id,
           jenisUserId: results[0].jenis_user_id,
         };
-
+        const payloadObjectRefreshToken = {
+          id: results[0].id,
+        };
         const accessToken = jsonWebToken.sign(
           payloadObject,
           process.env.ACCESS_TOKEN_SECRET,
@@ -323,7 +329,7 @@ export const loginSSO = async (req, res) => {
           process.env.ACCESS_TOKEN_SECRET,
           (err, result) => {
             const refreshToken = jsonWebToken.sign(
-              payloadObject,
+              payloadObjectRefreshToken,
               process.env.REFRESH_TOKEN_SECRET,
               { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
             );
@@ -342,11 +348,17 @@ export const loginSSO = async (req, res) => {
                   // maxAge: 24 * 60 * 60 * 1000
                   maxAge: 1000 * 60 * 60 * 24,
                 });
+                const csrfToken = crypto.randomUUID();
+                res.cookie("XSRF-TOKEN", csrfToken, {
+                  httpOnly: true,
+                  sameSite: "Strict", // atau 'Lax' tergantung kebutuhan
+                });
                 res.status(201).send({
                   status: true,
                   message: "access token created",
                   data: {
                     access_token: accessToken,
+                    csrfToken: csrfToken,
                   },
                 });
               })
@@ -381,8 +393,14 @@ export const loginSSOAdmin = async (req, res) => {
   //   console.log(token);
 
   try {
+    // const response = await axios.get(
+    //   "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+    //     token +
+    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
+    // );
+
     const response = await axios.get(
-      "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+      "http://192.168.50.86/sso/v1/token?value=" +
         token +
         "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
     );
@@ -425,6 +443,10 @@ export const loginSSOAdmin = async (req, res) => {
           jenisUserId: results[0].jenis_user_id,
         };
 
+        const payloadObjectRefreshToken = {
+          id: results[0].id,
+        };
+
         const accessToken = jsonWebToken.sign(
           payloadObject,
           process.env.ACCESS_TOKEN_SECRET,
@@ -435,7 +457,7 @@ export const loginSSOAdmin = async (req, res) => {
           process.env.ACCESS_TOKEN_SECRET,
           (err, result) => {
             const refreshToken = jsonWebToken.sign(
-              payloadObject,
+              payloadObjectRefreshToken,
               process.env.REFRESH_TOKEN_SECRET,
               { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
             );
@@ -500,34 +522,34 @@ export const logout = (req, res) => {
   res.clearCookie("refreshToken");
   res.sendStatus(200);
 
-//   users_sso
-//     .findAll({
-//       where: {
-//         refresh_token: refreshToken,
-//       },
-//     })
-//     .then((results) => {
-//       users_sso
-//         .update(
-//           { refresh_token: null },
-//           {
-//             where: {
-//               id: results[0].id,
-//             },
-//           }
-//         )
-//         .then((resultsUpdate) => {
-//           res.clearCookie("refreshToken");
-//           res.sendStatus(200);
-//         });
-//     })
-//     .catch((err) => {
-//       res.status(404).send({
-//         status: false,
-//         message: err,
-//       });
-//       return;
-//     });
+  //   users_sso
+  //     .findAll({
+  //       where: {
+  //         refresh_token: refreshToken,
+  //       },
+  //     })
+  //     .then((results) => {
+  //       users_sso
+  //         .update(
+  //           { refresh_token: null },
+  //           {
+  //             where: {
+  //               id: results[0].id,
+  //             },
+  //           }
+  //         )
+  //         .then((resultsUpdate) => {
+  //           res.clearCookie("refreshToken");
+  //           res.sendStatus(200);
+  //         });
+  //     })
+  //     .catch((err) => {
+  //       res.status(404).send({
+  //         status: false,
+  //         message: err,
+  //       });
+  //       return;
+  //     });
 };
 
 export const insertUser = (req, res) => {
