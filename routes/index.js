@@ -12,6 +12,8 @@ import {
   changePassword,
 } from "../controllers/UsersController.js";
 import { verifyToken } from "../middleware/VerifyToken.js";
+import { verifyCsrfToken } from "../middleware/VerifyCsrfToken.js";
+
 import { refreshToken } from "../controllers/RefreshTokenController.js";
 
 // Absensi
@@ -326,8 +328,8 @@ router.post("/apisirs6v2/validasi", verifyToken, insertValidasi);
 
 // Token
 // router.post("/apisirs6v2/login", login);
-router.delete("/apisirs6v2/logout", logout);
-router.get("/apisirs6v2/token", refreshToken);
+router.delete("/apisirs6v2/logout", verifyCsrfToken, logout);
+router.get("/apisirs6v2/token", verifyCsrfToken, refreshToken);
 
 router.get("/apisirs6v2/login", loginSSO);
 router.get("/apisirs6v2/loginadmin", loginSSOAdmin);
@@ -353,6 +355,60 @@ router.get("/apisirs6v2/provinsi/:id", verifyToken, showProvinsi);
 router.get("/apisirs6v2/kabkota", verifyToken, getKabKota);
 router.get("/apisirs6v2/kabkota/:id", verifyToken, showKabKota);
 
+// RL 3.1
+router.get("/apisirs6v2/rltigatitiksatu", verifyToken, getRLTigaTitikSatu);
+router.get("/apisirs6v2/rltigatitiksatu/:id", verifyToken, showRLTigaTitikSatu);
+
+// RL 3.2
+router.post(
+  "/apisirs6v2/rltigatitikdua",
+  verifyCsrfToken,
+  verifyToken,
+  insertRLTigaTitikDua
+);
+router.get("/apisirs6v2/rltigatitikdua", verifyToken, getRLTigaTitikDua);
+router.delete(
+  "/apisirs6v2/rltigatitikdua/:id",
+  verifyCsrfToken,
+  verifyToken,
+  deleteRLTigaTitikDua
+);
+router.get("/apisirs6v2/rltigatitikdua/:id", verifyToken, showRLTigaTitikDua);
+router.patch(
+  "/apisirs6v2/rltigatitikdua/:id",
+  verifyCsrfToken,
+  verifyToken,
+  updateRLTigaTitikDua
+);
+
+// RL 3.3
+router.post(
+  "/apisirs6v2/rltigatitiktiga",
+  verifyToken,
+  insertDataRLTigaTitikTiga
+);
+router.get("/apisirs6v2/rltigatitiktiga", verifyToken, getDataRLTigaTitikTiga);
+router.delete(
+  "/apisirs6v2/rltigatitiktiga/:id",
+  verifyToken,
+  deleteDataRLTigaTitikTiga
+);
+router.get(
+  "/apisirs6v2/rltigatitiktigadetail/:id",
+  verifyToken,
+  getDataRLTigaTitikTigaById
+);
+router.get(
+  "/apisirs6v2/cekrltigatitiktigadetail/",
+  verifyToken,
+  getDataRLTigaTitikTigaDetails
+);
+router.patch(
+  "/apisirs6v2/rltigatitiktigadetail/:id",
+  verifyToken,
+  updateDataRLTigaTitikTiga
+);
+
 // Jenis Pelayanan RL 3.2
 router.get(
   "/apisirs6v2/rltigatitikduajenispelayanan",
@@ -365,6 +421,142 @@ router.get(
   "/apisirs6v2/jenispelayanantigatitiktiga",
   verifyToken,
   getDataJenisPelayananTigaTitikTiga
+);
+
+// Jenis Pengunjung
+router.get("/apisirs6v2/jenispengunjung", verifyToken, getDataJenisPengunjung);
+
+// RL 3.4
+router.post(
+  "/apisirs6v2/rltigatitikempat",
+  verifyCsrfToken,
+  verifyToken,
+  insertDataRLTigaTitikEmpat
+);
+router.get(
+  "/apisirs6v2/rltigatitikempat",
+  verifyToken,
+  getDataRLTigaTitikEmpat
+);
+router.get(
+  "/apisirs6v2/rltigatitikempatdetail/:id",
+  verifyToken,
+  getRLTigaTitikEmpatById
+);
+router.delete(
+  "/apisirs6v2/rltigatitikempat/:id",
+  verifyCsrfToken,
+  verifyToken,
+  deleteDataRLTigaTitikEmpat
+);
+router.patch(
+  "/apisirs6v2/rltigatitikempatdetail/:id",
+  verifyCsrfToken,
+  verifyToken,
+  updateDataRLTigaTitikEmpat
+);
+
+// Jenis Kegiatan
+router.get(
+  "/apisirs6v2/jeniskegiatanrltigatitiklima",
+  verifyToken,
+  getDataJenisKegiatanRLTigaTitikLima
+);
+
+// RL 3.5
+router.post(
+  "/apisirs6v2/rltigatitiklima",
+  verifyCsrfToken,
+  verifyToken,
+  insertDataRLTigaTitikLima
+);
+router.get("/apisirs6v2/rltigatitiklima", verifyToken, getDataRLTigaTitikLima);
+router.get(
+  "/apisirs6v2/rltigatitiklimadetail/:id",
+  verifyToken,
+  getRLTigaTitikLimaById
+);
+router.delete(
+  "/apisirs6v2/rltigatitiklima/:id",
+  verifyCsrfToken,
+  verifyToken,
+  deleteDataRLTigaTitikLima
+);
+router.patch(
+  "/apisirs6v2/rltigatitiklimadetail/:id",
+  verifyCsrfToken,
+  verifyToken,
+  updateDataRLTigaTitikLima
+);
+
+// Jenis Kegiatan
+router.get(
+  "/apisirs6v2/jeniskegiatanrltigatitikenam",
+  verifyToken,
+  getDataJenisKegiatanRLTigaTitikEnam
+);
+
+// RL 3.6
+router.post(
+  "/apisirs6v2/rltigatitikenam",
+  verifyCsrfToken,
+  verifyToken,
+  insertDataRLTigaTitikEnam
+);
+router.get("/apisirs6v2/rltigatitikenam", verifyToken, getDataRLTigaTitikEnam);
+router.get(
+  "/apisirs6v2/rltigatitikenamdetail/:id",
+  verifyToken,
+  getRLTigaTitikEnamById
+);
+router.delete(
+  "/apisirs6v2/rltigatitikenam/:id",
+  verifyCsrfToken,
+  verifyToken,
+  deleteDataRLTigaTitikEnam
+);
+router.patch(
+  "/apisirs6v2/rltigatitikenamdetail/:id",
+  verifyCsrfToken,
+  verifyToken,
+  updateDataRLTigaTitikEnam
+);
+
+// Jenis Kegiatan
+router.get(
+  "/apisirs6v2/jeniskegiatanrltigatitiktujuh",
+  verifyToken,
+  getDataJenisKegiatanRLTigaTitikTujuh
+);
+
+// RL 3.7
+router.post(
+  "/apisirs6v2/rltigatitiktujuh",
+  verifyCsrfToken,
+  verifyToken,
+  insertDataRLTigaTitikTujuh
+);
+router.get(
+  "/apisirs6v2/rltigatitiktujuh",
+  verifyToken,
+  getDataRLTigaTitikTujuh
+);
+router.get(
+  "/apisirs6v2/rltigatitiktujuhdetail/:id",
+  verifyToken,
+  getRLTigaTitikTujuhById
+);
+router.delete(
+  "/apisirs6v2/rltigatitiktujuh/:id",
+  verifyCsrfToken,
+  verifyToken,
+  deleteDataRLTigaTitikTujuh
+);
+router.patch(
+  "/apisirs6v2/rltigatitiktujuhdetail/:id",
+  verifyCsrfToken,
+  verifyToken,
+  updateDataRLTigaTitikTujuh
 );
 
 //Jenis Pemeriksaan RL3.8
@@ -461,56 +653,10 @@ router.get("/apisirs6v2/icd/rawat_inap", verifyToken, getIcdRanap);
 router.get("/apisirs6v2/icd/rawat_inap/find", verifyToken, getIcdRanapbySearch);
 router.get("/apisirs6v2/icd/rawat_inap/id", verifyToken, getIcdRanapbyId);
 
-// RL 3.1
-router.get("/apisirs6v2/rltigatitiksatu", verifyToken, getRLTigaTitikSatu);
-router.get("/apisirs6v2/rltigatitiksatu/:id", verifyToken, showRLTigaTitikSatu);
-
-// RL 3.2
-router.post("/apisirs6v2/rltigatitikdua", verifyToken, insertRLTigaTitikDua);
-router.get("/apisirs6v2/rltigatitikdua", verifyToken, getRLTigaTitikDua);
-router.delete(
-  "/apisirs6v2/rltigatitikdua/:id",
-  verifyToken,
-  deleteRLTigaTitikDua
-);
-router.get("/apisirs6v2/rltigatitikdua/:id", verifyToken, showRLTigaTitikDua);
-router.patch(
-  "/apisirs6v2/rltigatitikdua/:id",
-  verifyToken,
-  updateRLTigaTitikDua
-);
-
-// RL 3.3
-router.post(
-  "/apisirs6v2/rltigatitiktiga",
-  verifyToken,
-  insertDataRLTigaTitikTiga
-);
-router.get("/apisirs6v2/rltigatitiktiga", verifyToken, getDataRLTigaTitikTiga);
-router.delete(
-  "/apisirs6v2/rltigatitiktiga/:id",
-  verifyToken,
-  deleteDataRLTigaTitikTiga
-);
-router.get(
-  "/apisirs6v2/rltigatitiktigadetail/:id",
-  verifyToken,
-  getDataRLTigaTitikTigaById
-);
-router.get(
-  "/apisirs6v2/cekrltigatitiktigadetail/",
-  verifyToken,
-  getDataRLTigaTitikTigaDetails
-);
-router.patch(
-  "/apisirs6v2/rltigatitiktigadetail/:id",
-  verifyToken,
-  updateDataRLTigaTitikTiga
-);
-
 // RL 3.8
 router.post(
   "/apisirs6v2/rltigatitikdelapan",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikDelapan
 );
@@ -526,11 +672,13 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitikdelapan/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikDelapan
 );
 router.patch(
   "/apisirs6v2/rltigatitikdelapan/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikDelapan
 );
@@ -538,6 +686,7 @@ router.patch(
 // RL 3.9 Baru
 router.post(
   "/apisirs6v2/rltigatitiksembilan",
+  verifyCsrfToken,
   verifyToken,
   insertRLTigaTitikSembilan
 );
@@ -548,6 +697,7 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitiksembilan/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteRLTigaTitikSembilan
 );
@@ -558,6 +708,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitiksembilan/:id",
+  verifyCsrfToken,
   verifyToken,
   updateRLTigaTitikSembilan
 );
@@ -570,11 +721,13 @@ router.get(
 );
 router.post(
   "/apisirs6v2/rltigatitiksepuluh",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikSepuluh
 );
 router.delete(
   "/apisirs6v2/rltigatitiksepuluh/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikSepuluh
 );
@@ -585,6 +738,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitiksepuluhdetail/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikSepuluh
 );
@@ -592,6 +746,7 @@ router.patch(
 // RL 3.11
 router.post(
   "/apisirs6v2/rltigatitiksebelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikSebelas
 );
@@ -607,11 +762,13 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitiksebelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikSebelas
 );
 router.delete(
   "/apisirs6v2/rltigatitiksebelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikSebelas
 );
@@ -619,6 +776,7 @@ router.delete(
 // RL 3.12
 router.post(
   "/apisirs6v2/rltigatitikduabelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikDuaBelas
 );
@@ -634,11 +792,13 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitikduabelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikDuaBelas
 );
 router.delete(
   "/apisirs6v2/rltigatitikduabelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikDuaBelas
 );
@@ -646,6 +806,7 @@ router.delete(
 // RL 3.13
 router.post(
   "/apisirs6v2/rltigatitiktigabelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikTigaBelas
 );
@@ -664,12 +825,14 @@ router.get(
 
 router.patch(
   "/apisirs6v2/rltigatitiktigabelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikTigaBelas
 );
 
 router.delete(
   "/apisirs6v2/rltigatitiktigabelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikTigaBelas
 );
@@ -677,6 +840,7 @@ router.delete(
 // RL 3.14
 router.post(
   "/apisirs6v2/rltigatitikempatbelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikEmpatBelas
 );
@@ -692,11 +856,13 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitikempatbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikEmpatBelas
 );
 router.patch(
   "/apisirs6v2/rltigatitikempatbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikEmpatBelas
 );
@@ -709,11 +875,13 @@ router.get(
 );
 router.post(
   "/apisirs6v2/rltigatitiklimabelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikLimaBelas
 );
 router.delete(
   "/apisirs6v2/rltigatitiklimabelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikLimaBelas
 );
@@ -729,6 +897,7 @@ router.get(
 // );
 router.patch(
   "/apisirs6v2/rltigatitiklimabelasdetail/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikLimaBelas
 );
@@ -742,6 +911,7 @@ router.get(
 
 router.post(
   "/apisirs6v2/rltigatitikenambelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikEnamBelas
 );
@@ -760,12 +930,14 @@ router.get(
 
 router.patch(
   "/apisirs6v2/rltigatitikenambelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikEnamBelas
 );
 
 router.delete(
   "/apisirs6v2/rltigatitikenambelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikEnamBelas
 );
@@ -773,6 +945,7 @@ router.delete(
 // RL 3.17
 router.post(
   "/apisirs6v2/rltigatitiktujuhbelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikTujuhBelas
 );
@@ -783,6 +956,7 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitiktujuhbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteRLTigaTitikTujuhBelas
 );
@@ -793,6 +967,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitiktujuhbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateRLTigaTitikTujuhBelas
 );
@@ -800,6 +975,7 @@ router.patch(
 // RL 3.18
 router.post(
   "/apisirs6v2/rltigatitikdelapanbelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikDelapanBelas
 );
@@ -810,6 +986,7 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitikdelapanbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteRLTigaTitikDelapanBelas
 );
@@ -820,6 +997,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitikdelapanbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   updateRLTigaTitikDelapanBelas
 );
@@ -827,6 +1005,7 @@ router.patch(
 // RL 3.19 new
 router.post(
   "/apisirs6v2/rltigatitiksembilanbelas",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLTigaTitikSembilanBelas
 );
@@ -837,6 +1016,7 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rltigatitiksembilanbelas/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLTigaTitikSembilanBelas
 );
@@ -852,6 +1032,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rltigatitiksembilanbelasdetail/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLTigaTitikSembilanBelas
 );
@@ -859,6 +1040,7 @@ router.patch(
 // RL 4.1
 router.post(
   "/apisirs6v2/rlempattitiksatu",
+  verifyCsrfToken,
   verifyToken,
   insertDataRLEmpatTitikSatu
 );
@@ -869,6 +1051,7 @@ router.get(
 );
 router.delete(
   "/apisirs6v2/rlempattitiksatu/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLEmpatTitikSatu
 );
@@ -879,6 +1062,7 @@ router.get(
 );
 router.patch(
   "/apisirs6v2/rlempattitiksatu/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLEmpatTitikSatu
 );
@@ -901,6 +1085,7 @@ router.get("/apisirs6v2/icd/rawat_jalan/id", verifyToken, getIcdRajalbyId);
 // RL 5.1
 router.post(
   "/apisirs6v2/rllimatitiksatu",
+  verifyCsrfToken,
   verifyToken,
   insertdataRLLimaTitikSatu
 );
@@ -915,12 +1100,14 @@ router.get(
 
 router.patch(
   "/apisirs6v2/rllimatitiksatu/:id",
+  verifyCsrfToken,
   verifyToken,
   updateDataRLLimaTitikSatu
 );
 
 router.delete(
   "/apisirs6v2/rllimatitiksatu/:id",
+  verifyCsrfToken,
   verifyToken,
   deleteDataRLLimaTitikSatu
 );
@@ -930,131 +1117,5 @@ router.get("/apisirs6v2/rllimatitikdua", verifyToken, getRLLimaTitikDua);
 
 // RL 5.3
 router.get("/apisirs6v2/rllimatitiktiga", verifyToken, getRLLimatitikTiga);
-
-//Punya Bibo
-// Jenis Pengunjung
-router.get("/apisirs6v2/jenispengunjung", verifyToken, getDataJenisPengunjung);
-
-// RL 3.4
-router.post(
-  "/apisirs6v2/rltigatitikempat",
-  verifyToken,
-  insertDataRLTigaTitikEmpat
-);
-router.get(
-  "/apisirs6v2/rltigatitikempat",
-  verifyToken,
-  getDataRLTigaTitikEmpat
-);
-router.get(
-  "/apisirs6v2/rltigatitikempatdetail/:id",
-  verifyToken,
-  getRLTigaTitikEmpatById
-);
-router.delete(
-  "/apisirs6v2/rltigatitikempat/:id",
-  verifyToken,
-  deleteDataRLTigaTitikEmpat
-);
-router.patch(
-  "/apisirs6v2/rltigatitikempatdetail/:id",
-  verifyToken,
-  updateDataRLTigaTitikEmpat
-);
-
-// Jenis Kegiatan
-router.get(
-  "/apisirs6v2/jeniskegiatanrltigatitiklima",
-  verifyToken,
-  getDataJenisKegiatanRLTigaTitikLima
-);
-
-// RL 3.5
-router.post(
-  "/apisirs6v2/rltigatitiklima",
-  verifyToken,
-  insertDataRLTigaTitikLima
-);
-router.get("/apisirs6v2/rltigatitiklima", verifyToken, getDataRLTigaTitikLima);
-router.get(
-  "/apisirs6v2/rltigatitiklimadetail/:id",
-  verifyToken,
-  getRLTigaTitikLimaById
-);
-router.delete(
-  "/apisirs6v2/rltigatitiklima/:id",
-  verifyToken,
-  deleteDataRLTigaTitikLima
-);
-router.patch(
-  "/apisirs6v2/rltigatitiklimadetail/:id",
-  verifyToken,
-  updateDataRLTigaTitikLima
-);
-
-// Jenis Kegiatan
-router.get(
-  "/apisirs6v2/jeniskegiatanrltigatitikenam",
-  verifyToken,
-  getDataJenisKegiatanRLTigaTitikEnam
-);
-
-// RL 3.6
-router.post(
-  "/apisirs6v2/rltigatitikenam",
-  verifyToken,
-  insertDataRLTigaTitikEnam
-);
-router.get("/apisirs6v2/rltigatitikenam", verifyToken, getDataRLTigaTitikEnam);
-router.get(
-  "/apisirs6v2/rltigatitikenamdetail/:id",
-  verifyToken,
-  getRLTigaTitikEnamById
-);
-router.delete(
-  "/apisirs6v2/rltigatitikenam/:id",
-  verifyToken,
-  deleteDataRLTigaTitikEnam
-);
-router.patch(
-  "/apisirs6v2/rltigatitikenamdetail/:id",
-  verifyToken,
-  updateDataRLTigaTitikEnam
-);
-
-// Jenis Kegiatan
-router.get(
-  "/apisirs6v2/jeniskegiatanrltigatitiktujuh",
-  verifyToken,
-  getDataJenisKegiatanRLTigaTitikTujuh
-);
-
-// RL 3.7
-router.post(
-  "/apisirs6v2/rltigatitiktujuh",
-  verifyToken,
-  insertDataRLTigaTitikTujuh
-);
-router.get(
-  "/apisirs6v2/rltigatitiktujuh",
-  verifyToken,
-  getDataRLTigaTitikTujuh
-);
-router.get(
-  "/apisirs6v2/rltigatitiktujuhdetail/:id",
-  verifyToken,
-  getRLTigaTitikTujuhById
-);
-router.delete(
-  "/apisirs6v2/rltigatitiktujuh/:id",
-  verifyToken,
-  deleteDataRLTigaTitikTujuh
-);
-router.patch(
-  "/apisirs6v2/rltigatitiktujuhdetail/:id",
-  verifyToken,
-  updateDataRLTigaTitikTujuh
-);
-//Punya Bibo
 
 export default router;

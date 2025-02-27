@@ -1,4 +1,5 @@
 import express from "express";
+import session from "express-session";
 import {} from "dotenv/config";
 import { databaseRSOnline, databaseSIRS } from "./config/Database.js";
 import router from "./routes/index.js";
@@ -13,6 +14,16 @@ try {
 } catch (error) {
   console.log(error);
 }
+
+app.use(
+  session({
+    secret: "a8d2c9b6-61f2-4e7a-a8cf-7f7d9a8978e4",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
+
 try {
   await databaseRSOnline.authenticate();
   console.log("database rsonline connected...");
