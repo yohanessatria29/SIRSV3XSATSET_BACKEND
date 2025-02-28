@@ -271,17 +271,17 @@ export const login = async (req, res) => {
 export const loginSSO = async (req, res) => {
   const token = req.query.token;
   try {
-    // const response = await axios.get(
-    //   "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
-    //     token +
-    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
-    // );
-
     const response = await axios.get(
-      "http://192.168.50.86/sso/v1/token?value=" +
+      "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
         token +
         "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
     );
+
+    // const response = await axios.get(
+    //   "http://192.168.50.86/sso/v1/token?value=" +
+    //     token +
+    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
+    // );
     const email_sso = response.data.data.email;
 
     users_sso
