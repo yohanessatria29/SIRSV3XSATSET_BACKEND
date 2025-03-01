@@ -104,7 +104,7 @@ export const get = (req, callback) => {
 
     const sqlWhere = 'WHERE icd.status_top_10 = 1 AND icd.status_rawat_jalan = 1 AND '
 
-    const sqlOrder = 'GROUP BY icd.icd_code_group ORDER BY total_kasus_baru_group_by_icd_code DESC LIMIT 10'
+    const sqlOrder = 'GROUP BY icd.icd_code_group, icd.description_code_group ORDER BY total_kasus_baru_group_by_icd_code DESC LIMIT 10'
 
     const filter = []
     const sqlFilterValue = []
