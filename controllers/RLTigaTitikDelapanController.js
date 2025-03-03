@@ -177,8 +177,8 @@ export const insertDataRLTigaTitikDelapan = async (req, res) => {
           rLTigaTitikDelapanPemeriksaanId: Joi.number().required(),
           jumlahLaki: Joi.number().min(0),
           jumlahPerempuan: Joi.number().min(0),
-          rataLaki: Joi.number().min(0),
-          rataPerempuan: Joi.number().min(0),
+          rataLaki: Joi.number().min(0).precision(3),
+          rataPerempuan: Joi.number().min(0).precision(3),
         })
       )
       .required(),
