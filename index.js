@@ -20,7 +20,7 @@ app.use(
     secret: "a8d2c9b6-61f2-4e7a-a8cf-7f7d9a8978e4",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: { secure: true },
   })
 );
 

@@ -155,8 +155,9 @@ export const login = async (req, res) => {
                 .then(() => {
                   res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    // maxAge: 24 * 60 * 60 * 1000
-                    maxAge: 1000 * 60 * 60 * 24,
+                    sameSite: 'Strict',
+                    secure: true, 
+                    maxAge: 6 * 60 * 60 * 1000
                   });
                   res.status(201).send({
                     status: true,
@@ -345,13 +346,15 @@ export const loginSSO = async (req, res) => {
               .then(() => {
                 res.cookie("refreshToken", refreshToken, {
                   httpOnly: true,
-                  // maxAge: 24 * 60 * 60 * 1000
-                  maxAge: 1000 * 60 * 60 * 24,
+                  sameSite: 'Strict',
+                  secure: true, 
+                  maxAge: 6 * 60 * 60 * 1000
                 });
                 const csrfToken = crypto.randomUUID();
                 res.cookie("XSRF-TOKEN", csrfToken, {
                   httpOnly: true,
                   sameSite: "Strict", // atau 'Lax' tergantung kebutuhan
+                  secure: true,
                 });
                 res.status(201).send({
                   status: true,
