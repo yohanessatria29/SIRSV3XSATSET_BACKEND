@@ -177,8 +177,8 @@ export const insertDataRLTigaTitikDelapan = async (req, res) => {
           rLTigaTitikDelapanPemeriksaanId: Joi.number().required(),
           jumlahLaki: Joi.number().min(0),
           jumlahPerempuan: Joi.number().min(0),
-          rataLaki: Joi.number().min(0),
-          rataPerempuan: Joi.number().min(0),
+          rataLaki: Joi.number().min(0).precision(3),
+          rataPerempuan: Joi.number().min(0).precision(3),
         })
       )
       .required(),
@@ -272,13 +272,13 @@ export const updateDataRLTigaTitikDelapan = async (req, res) => {
       if (
         existingData.jumlahLaki !== parseInt(req.body.jumlahLaki) ||
         existingData.jumlahPerempuan !== parseInt(req.body.jumlahPerempuan) ||
-        existingData.rataLaki !== parseInt(req.body.rataLaki) ||
-        existingData.rataPerempuan !== parseInt(req.body.rataPerempuan) 
+        existingData.rataLaki !== parseFloat(req.body.rataLaki) ||
+        existingData.rataPerempuan !== parseFloat(req.body.rataPerempuan)
       ) {
         existingData.jumlahLaki = parseInt(req.body.jumlahLaki) 
         existingData.jumlahPerempuan = parseInt(req.body.jumlahPerempuan) 
-        existingData.rataLaki = parseInt(req.body.rataLaki) 
-        existingData.rataPerempuan = parseInt(req.body.rataPerempuan) 
+        existingData.rataLaki = parseFloat(req.body.rataLaki)
+        existingData.rataPerempuan = parseFloat(req.body.rataPerempuan)
         await existingData.save({ transaction });
         await transaction.commit();
 

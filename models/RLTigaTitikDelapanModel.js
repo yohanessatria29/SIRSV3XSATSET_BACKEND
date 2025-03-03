@@ -39,10 +39,10 @@ export const rlTigaTitikDelapanDetail = databaseSIRS.define(
       type: DataTypes.INTEGER,
     },
     rataLaki: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(10,3),
     },
     rataPerempuan: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(10,3),
     }
   }
 );
