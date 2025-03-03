@@ -74,8 +74,6 @@ export const rlTigaTitikDuaDetail = databaseSIRS.define('rl_tiga_titik_dua_detai
 
 export const get = (req, callback) => {
     const sqlSelect = ' SELECT ' +
-        'rl_tiga_titik_dua_detail.id, ' +
-        'rl_tiga_titik_dua_detail.rs_id, ' +
         'rl_tiga_titik_dua_kelompok_jenis_pelayanan.nama AS nama_kelompok_jenis_pelayanan, ' +
         'SUM(' +
         'rl_tiga_titik_dua_detail.rincian_hari_perawatan_kelas_VVIP + ' +
@@ -131,7 +129,7 @@ export const get = (req, callback) => {
 
     const sqlWhere = 'WHERE '
 
-    const sqlGroup = 'GROUP BY rl_tiga_titik_dua_jenis_pelayanan.rl_tiga_titik_dua_kelompok_jenis_pelayanan_id '
+    const sqlGroup = 'GROUP BY rl_tiga_titik_dua_jenis_pelayanan.rl_tiga_titik_dua_kelompok_jenis_pelayanan_id, rl_tiga_titik_dua_detail.periode '
 
     const sqlOrder = 'ORDER BY rl_tiga_titik_dua_detail.rs_id'
 
