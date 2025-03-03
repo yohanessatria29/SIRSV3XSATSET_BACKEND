@@ -523,6 +523,8 @@ export const logout = (req, res) => {
     return;
   }
   res.clearCookie("refreshToken");
+  res.clearCookie('XSRF-TOKEN')
+  res.clearCookie('connect.sid')
   res.sendStatus(200);
 
   //   users_sso
