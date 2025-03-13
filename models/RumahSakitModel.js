@@ -12,7 +12,7 @@ export const get = (req, callback) => {
         'db_fasyankes.`data` INNER JOIN db_fasyankes.provinsi ON db_fasyankes.provinsi.id = db_fasyankes.`data`.provinsi_id ' +
         'INNER JOIN db_fasyankes.kab_kota ON db_fasyankes.kab_kota.id = db_fasyankes.`data`.kab_kota_id '
 
-    const sqlWhere = 'WHERE db_fasyankes.aktive = 1 AND '
+    const sqlWhere = 'WHERE db_fasyankes.`data`.aktive = 1 AND '
 
     const sqlOrder = 'ORDER BY `data`.Propinsi'
 
