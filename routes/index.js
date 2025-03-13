@@ -327,7 +327,7 @@ const router = express.Router();
 router.post("/apisirs6v2/validasi", verifyToken, insertValidasi);
 
 // Token
-router.post("/apisirs6v2/login", login);
+// router.post("/apisirs6v2/login", login);
 router.delete("/apisirs6v2/logout", verifyCsrfToken, logout);
 router.get("/apisirs6v2/token", refreshToken);
 
