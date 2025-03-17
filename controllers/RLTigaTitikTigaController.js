@@ -307,6 +307,98 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
 };
 
 // Done
+// export const updateDataRLTigaTitikTiga = async (req, res) => {
+//   const schema = Joi.object({
+//     total_pasien_rujukan: Joi.number().required(),
+//     total_pasien_non_rujukan: Joi.number().required(),
+//     tlp_dirawat: Joi.number().required(),
+//     tlp_dirujuk: Joi.number().required(),
+//     tlp_pulang: Joi.number().required(),
+//     m_igd_laki: Joi.number().required(),
+//     m_igd_perempuan: Joi.number().required(),
+//     doa_laki: Joi.number().required(),
+//     doa_perempuan: Joi.number().required(),
+//     luka_laki: Joi.number().required(),
+//     luka_perempuan: Joi.number().required(),
+//     false_emergency: Joi.number().required(),
+//   });
+
+//   const { error, value } = schema.validate(req.body);
+
+//   if (error) {
+//     res.status(404).send({
+//       status: false,
+//       message: error.details[0].message,
+//     });
+//     return;
+//   }
+
+//   let transaction;
+//   try {
+//     transaction = await databaseSIRS.transaction();
+
+//     const existingData = await rlTigaTitikTigaDetail.findOne({
+//       where: {
+//         id: req.params.id,
+//         rs_id: req.user.satKerId,
+//       },
+//     });
+
+//     if (existingData) {
+//       if (existingData.total_pasien_rujukan !== req.body.total_pasien_rujukan)
+//         existingData.total_pasien_rujukan = req.body.total_pasien_rujukan;
+//       if (
+//         existingData.total_pasien_non_rujukan !==
+//         req.body.total_pasien_non_rujukan
+//       )
+//         existingData.total_pasien_non_rujukan =
+//           req.body.total_pasien_non_rujukan;
+//       if (existingData.tlp_dirawat !== req.body.tlp_dirawat)
+//         existingData.tlp_dirawat = req.body.tlp_dirawat;
+//       if (existingData.tlp_dirujuk !== req.body.tlp_dirujuk)
+//         existingData.tlp_dirujuk = req.body.tlp_dirujuk;
+//       if (existingData.tlp_pulang !== req.body.tlp_pulang)
+//         existingData.tlp_pulang = req.body.tlp_pulang;
+//       if (existingData.m_igd_laki !== req.body.m_igd_laki)
+//         existingData.m_igd_laki = req.body.m_igd_laki;
+//       if (existingData.m_igd_perempuan !== req.body.m_igd_perempuan)
+//         existingData.m_igd_perempuan = req.body.m_igd_perempuan;
+//       if (existingData.doa_laki !== req.body.doa_laki)
+//         existingData.doa_laki = req.body.doa_laki;
+//       if (existingData.doa_perempuan !== req.body.doa_perempuan)
+//         existingData.doa_perempuan = req.body.doa_perempuan;
+//       if (existingData.luka_laki !== req.body.luka_laki)
+//         existingData.luka_laki = req.body.luka_laki;
+//       if (existingData.luka_perempuan !== req.body.luka_perempuan)
+//         existingData.luka_perempuan = req.body.luka_perempuan;
+//       if (existingData.false_emergency !== req.body.false_emergency)
+//         existingData.false_emergency = req.body.false_emergency;
+
+//       await existingData.save();
+//       await transaction.commit();
+
+//       res.status(201).send({
+//         status: true,
+//         message: "Data berhasil diperbaharui.",
+//       });
+//     } else {
+//       await transaction.rollback();
+//       res.status(400).send({
+//         status: false,
+//         message: "Data tidak ditemukan",
+//       });
+//     }
+//   } catch (error) {
+//     if (transaction) {
+//       await transaction.rollback();
+//     }
+//     res.status(500).send({
+//       status: false,
+//       message: "Gagal Memperbaharui Data",
+//     });
+//   }
+// };
+
 export const updateDataRLTigaTitikTiga = async (req, res) => {
   const schema = Joi.object({
     total_pasien_rujukan: Joi.number().required(),
@@ -333,71 +425,43 @@ export const updateDataRLTigaTitikTiga = async (req, res) => {
     return;
   }
 
-  let transaction;
   try {
-    transaction = await databaseSIRS.transaction();
-
-    const existingData = await rlTigaTitikTigaDetail.findOne({
-      where: {
-        id: req.params.id,
-        rs_id: req.user.satKerId,
+    const update = await rlTigaTitikTigaDetail.update(
+      {
+        total_pasien_rujukan: req.body.totalPasienRujukan,
+        total_pasien_non_rujukan: req.body.totalPasienNonRujukan,
+        tlp_dirawat: req.body.tlpDirawat,
+        tlp_dirujuk: req.body.tlpDirujuk,
+        tlp_pulang: req.body.tlpPulang,
+        m_igd_laki: req.body.mIgdLaki,
+        m_igd_perempuan: req.body.mIgdPerempuan,
+        doa_laki: req.body.doaLaki,
+        doa_perempuan: req.body.doaPerempuan,
+        luka_laki: req.body.lukaLaki,
+        luka_perempuan: req.body.lukaPerempuan,
+        false_emergency: req.body.falseEmergency,
+        user_id: req.user.id,
       },
+      {
+        where: {
+          id: req.params.id,
+          rs_id: req.user.satKerId,
+        },
+      }
+    );
+
+    res.status(201).send({
+      status: true,
+      message: update,
     });
-
-    if (existingData) {
-      if (existingData.total_pasien_rujukan !== req.body.total_pasien_rujukan)
-        existingData.total_pasien_rujukan = req.body.total_pasien_rujukan;
-      if (
-        existingData.total_pasien_non_rujukan !==
-        req.body.total_pasien_non_rujukan
-      )
-        existingData.total_pasien_non_rujukan =
-          req.body.total_pasien_non_rujukan;
-      if (existingData.tlp_dirawat !== req.body.tlp_dirawat)
-        existingData.tlp_dirawat = req.body.tlp_dirawat;
-      if (existingData.tlp_dirujuk !== req.body.tlp_dirujuk)
-        existingData.tlp_dirujuk = req.body.tlp_dirujuk;
-      if (existingData.tlp_pulang !== req.body.tlp_pulang)
-        existingData.tlp_pulang = req.body.tlp_pulang;
-      if (existingData.m_igd_laki !== req.body.m_igd_laki)
-        existingData.m_igd_laki = req.body.m_igd_laki;
-      if (existingData.m_igd_perempuan !== req.body.m_igd_perempuan)
-        existingData.m_igd_perempuan = req.body.m_igd_perempuan;
-      if (existingData.doa_laki !== req.body.doa_laki)
-        existingData.doa_laki = req.body.doa_laki;
-      if (existingData.doa_perempuan !== req.body.doa_perempuan)
-        existingData.doa_perempuan = req.body.doa_perempuan;
-      if (existingData.luka_laki !== req.body.luka_laki)
-        existingData.luka_laki = req.body.luka_laki;
-      if (existingData.luka_perempuan !== req.body.luka_perempuan)
-        existingData.luka_perempuan = req.body.luka_perempuan;
-      if (existingData.false_emergency !== req.body.false_emergency)
-        existingData.false_emergency = req.body.false_emergency;
-
-      await existingData.save();
-      await transaction.commit();
-
-      res.status(201).send({
-        status: true,
-        message: "Data berhasil diperbaharui.",
-      });
-    } else {
-      await transaction.rollback();
-      res.status(400).send({
-        status: false,
-        message: "Data tidak ditemukan",
-      });
-    }
   } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
     res.status(500).send({
       status: false,
       message: "Gagal Memperbaharui Data",
     });
   }
 };
+
 
 // Done
 export const deleteDataRLTigaTitikTiga = async (req, res) => {
