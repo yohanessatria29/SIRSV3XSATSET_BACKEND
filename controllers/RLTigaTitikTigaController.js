@@ -287,22 +287,36 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
       },
     });
   } catch (error) {
-    if (transaction) {
-      if (error.name == "SequelizeForeignKeyConstraintError") {
-        res.status(400).send({
-          status: false,
-          message: "Gagal Input Data, Jenis Kegiatan Salah.",
-          data: error,
-        });
-      } else {
-        console.log(error);
-        res.status(400).send({
-          status: false,
-          message: error,
-        });
-      }
-      await transaction.rollback();
+    await transaction.rollback();
+    if (error.name == "SequelizeForeignKeyConstraintError") {
+      res.status(400).send({
+        status: false,
+        message: "Gagal Input Data, Jenis Kegiatan Salah.",
+        data: error,
+      });
+    } else {
+      console.log(error);
+      res.status(400).send({
+        status: false,
+        message: error,
+      });
     }
+    // if (transaction) {
+    //   if (error.name == "SequelizeForeignKeyConstraintError") {
+    //     res.status(400).send({
+    //       status: false,
+    //       message: "Gagal Input Data, Jenis Kegiatan Salah.",
+    //       data: error,
+    //     });
+    //   } else {
+    //     console.log(error);
+    //     res.status(400).send({
+    //       status: false,
+    //       message: error,
+    //     });
+    //   }
+    //   await transaction.rollback();
+    // }
   }
 };
 
