@@ -170,6 +170,156 @@ export const getDataRLTigaTitikTigaDetails = (req, res) => {
 };
 
 // Done
+// export const insertDataRLTigaTitikTiga = async (req, res) => {
+//   const schema = Joi.object({
+//     tahun: Joi.number().required(),
+//     bulan: Joi.number().required(),
+//     data: Joi.array()
+//       .items(
+//         Joi.object().keys({
+//           jenisPelayananTigaTitikTigaId: Joi.number().required(),
+//           total_pasien_rujukan: Joi.number().min(0),
+//           total_pasien_non_rujukan: Joi.number().min(0),
+//           tlp_dirawat: Joi.number().min(0),
+//           tlp_dirujuk: Joi.number().min(0),
+//           tlp_pulang: Joi.number().min(0),
+//           m_igd_laki: Joi.number().min(0),
+//           m_igd_perempuan: Joi.number().min(0),
+//           doa_laki: Joi.number().min(0),
+//           doa_perempuan: Joi.number().min(0),
+//           luka_laki: Joi.number().min(0),
+//           luka_perempuan: Joi.number().min(0),
+//           false_emergency: Joi.number().min(0),
+//         })
+//       )
+//       .required(),
+//   });
+
+//   const { error, value } = schema.validate(req.body);
+//   if (error) {
+//     res.status(404).send({
+//       status: false,
+//       message: error.details[0].message,
+//     });
+//     return;
+//   }
+
+//   let transaction;
+
+//   try {
+//     transaction = await databaseSIRS.transaction();
+//     let rlTigaTitikTIgaID;
+
+//     const dataExisted = await rlTigaTitikTiga.findOne({
+//       where: {
+//         tahun: req.body.tahun,
+//         bulan: req.body.bulan,
+//         rs_id: req.user.satKerId,
+//         user_id: req.user.id,
+//       },
+//     });
+
+//     if (dataExisted) {
+//       rlTigaTitikTIgaID = dataExisted.id;
+//     } else {
+//       const rlInsertHeader = await rlTigaTitikTiga.create(
+//         {
+//           rs_id: req.user.satKerId,
+//           user_id: req.user.id,
+//           tahun: req.body.tahun,
+//           bulan: req.body.bulan,
+//         },
+//         { transaction }
+//       );
+
+//       rlTigaTitikTIgaID = rlInsertHeader.id;
+//     }
+
+//     const dataDetail = req.body.data.map((value, index) => {
+//       const now = new Date();
+//       const date = now.getDate();
+//       const bulan = req.body.bulan < 10 ? `0${req.body.bulan}` : req.body.bulan;
+//       return {
+//         tahun: `${req.body.tahun}-${bulan}-01`,
+//         bulan: req.body.bulan,
+//         rs_id: req.user.satKerId,
+//         rl_tiga_titik_tiga_id: rlTigaTitikTIgaID,
+//         jenis_pelayanan_rl_tiga_titik_tiga_id:
+//           value.jenisPelayananTigaTitikTigaId,
+//         total_pasien_rujukan: value.total_pasien_rujukan,
+//         total_pasien_non_rujukan: value.total_pasien_non_rujukan,
+//         tlp_dirawat: value.tlp_dirawat,
+//         tlp_dirujuk: value.tlp_dirujuk,
+//         tlp_pulang: value.tlp_pulang,
+//         m_igd_laki: value.m_igd_laki,
+//         m_igd_perempuan: value.m_igd_perempuan,
+//         doa_laki: value.doa_laki,
+//         doa_perempuan: value.doa_perempuan,
+//         luka_laki: value.luka_laki,
+//         luka_perempuan: value.luka_perempuan,
+//         false_emergency: value.false_emergency,
+//         user_id: req.user.id,
+//       };
+//     });
+
+//     await rlTigaTitikTigaDetail.bulkCreate(dataDetail, {
+//       transaction,
+//       updateOnDuplicate: ["total_pasien_rujukan"],
+//       updateOnDuplicate: ["total_pasien_non_rujukan"],
+//       updateOnDuplicate: ["tlp_dirawat"],
+//       updateOnDuplicate: ["tlp_dirujuk"],
+//       updateOnDuplicate: ["tlp_pulang"],
+//       updateOnDuplicate: ["m_igd_laki"],
+//       updateOnDuplicate: ["m_igd_perempuan"],
+//       updateOnDuplicate: ["doa_laki"],
+//       updateOnDuplicate: ["doa_perempuan"],
+//       updateOnDuplicate: ["luka_laki"],
+//       updateOnDuplicate: ["luka_perempuan"],
+//       updateOnDuplicate: ["false_emergency"],
+//     });
+
+//     await transaction.commit();
+//     res.status(201).send({
+//       status: true,
+//       message: "data created",
+//       data: {
+//         id: rlTigaTitikTIgaID,
+//       },
+//     });
+//   } catch (error) {
+//     await transaction.rollback();
+//     if (error.name == "SequelizeForeignKeyConstraintError") {
+//       res.status(400).send({
+//         status: false,
+//         message: "Gagal Input Data, Jenis Kegiatan Salah.",
+//         data: error,
+//       });
+//     } else {
+//       console.log(error);
+//       res.status(400).send({
+//         status: false,
+//         message: error,
+//       });
+//     }
+//     // if (transaction) {
+//     //   if (error.name == "SequelizeForeignKeyConstraintError") {
+//     //     res.status(400).send({
+//     //       status: false,
+//     //       message: "Gagal Input Data, Jenis Kegiatan Salah.",
+//     //       data: error,
+//     //     });
+//     //   } else {
+//     //     console.log(error);
+//     //     res.status(400).send({
+//     //       status: false,
+//     //       message: error,
+//     //     });
+//     //   }
+//     //   await transaction.rollback();
+//     // }
+//   }
+// };
+
 export const insertDataRLTigaTitikTiga = async (req, res) => {
   const schema = Joi.object({
     tahun: Joi.number().required(),
@@ -178,18 +328,18 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
       .items(
         Joi.object().keys({
           jenisPelayananTigaTitikTigaId: Joi.number().required(),
-          total_pasien_rujukan: Joi.number().min(0),
-          total_pasien_non_rujukan: Joi.number().min(0),
-          tlp_dirawat: Joi.number().min(0),
-          tlp_dirujuk: Joi.number().min(0),
-          tlp_pulang: Joi.number().min(0),
-          m_igd_laki: Joi.number().min(0),
-          m_igd_perempuan: Joi.number().min(0),
-          doa_laki: Joi.number().min(0),
-          doa_perempuan: Joi.number().min(0),
-          luka_laki: Joi.number().min(0),
-          luka_perempuan: Joi.number().min(0),
-          false_emergency: Joi.number().min(0),
+          total_pasien_rujukan: Joi.number().min(0).optional(),
+          total_pasien_non_rujukan: Joi.number().min(0).optional(),
+          tlp_dirawat: Joi.number().min(0).optional(),
+          tlp_dirujuk: Joi.number().min(0).optional(),
+          tlp_pulang: Joi.number().min(0).optional(),
+          m_igd_laki: Joi.number().min(0).optional(),
+          m_igd_perempuan: Joi.number().min(0).optional(),
+          doa_laki: Joi.number().min(0).optional(),
+          doa_perempuan: Joi.number().min(0).optional(),
+          luka_laki: Joi.number().min(0).optional(),
+          luka_perempuan: Joi.number().min(0).optional(),
+          false_emergency: Joi.number().min(0).optional(),
         })
       )
       .required(),
@@ -205,45 +355,27 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
   }
 
   let transaction;
-
   try {
     transaction = await databaseSIRS.transaction();
-    let rlTigaTitikTIgaID;
-
-    const dataExisted = await rlTigaTitikTiga.findOne({
-      where: {
+    const resultInsertHeader = await rlTigaTitikTiga.create(
+      {
+        rs_id: req.user.rsId,
         tahun: req.body.tahun,
-        bulan: req.body.bulan,
-        rs_id: req.user.satKerId,
         user_id: req.user.id,
+        rs_id: req.user.satKerId,
+        bulan: req.body.bulan,
       },
-    });
-
-    if (dataExisted) {
-      rlTigaTitikTIgaID = dataExisted.id;
-    } else {
-      const rlInsertHeader = await rlTigaTitikTiga.create(
-        {
-          rs_id: req.user.satKerId,
-          user_id: req.user.id,
-          tahun: req.body.tahun,
-          bulan: req.body.bulan,
-        },
-        { transaction }
-      );
-
-      rlTigaTitikTIgaID = rlInsertHeader.id;
-    }
+      { transaction }
+    );
 
     const dataDetail = req.body.data.map((value, index) => {
       const now = new Date();
-      const date = now.getDate();
       const bulan = req.body.bulan < 10 ? `0${req.body.bulan}` : req.body.bulan;
       return {
         tahun: `${req.body.tahun}-${bulan}-01`,
         bulan: req.body.bulan,
         rs_id: req.user.satKerId,
-        rl_tiga_titik_tiga_id: rlTigaTitikTIgaID,
+        rl_tiga_titik_tiga_id: resultInsertHeader.id,
         jenis_pelayanan_rl_tiga_titik_tiga_id:
           value.jenisPelayananTigaTitikTigaId,
         total_pasien_rujukan: value.total_pasien_rujukan,
@@ -262,63 +394,37 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
       };
     });
 
-    await rlTigaTitikTigaDetail.bulkCreate(dataDetail, {
-      transaction,
-      updateOnDuplicate: ["total_pasien_rujukan"],
-      updateOnDuplicate: ["total_pasien_non_rujukan"],
-      updateOnDuplicate: ["tlp_dirawat"],
-      updateOnDuplicate: ["tlp_dirujuk"],
-      updateOnDuplicate: ["tlp_pulang"],
-      updateOnDuplicate: ["m_igd_laki"],
-      updateOnDuplicate: ["m_igd_perempuan"],
-      updateOnDuplicate: ["doa_laki"],
-      updateOnDuplicate: ["doa_perempuan"],
-      updateOnDuplicate: ["luka_laki"],
-      updateOnDuplicate: ["luka_perempuan"],
-      updateOnDuplicate: ["false_emergency"],
-    });
+    await rlTigaTitikTigaDetail.bulkCreate(
+      dataDetail,
+      {
+        transaction: transaction
+      }
+    );
 
     await transaction.commit();
     res.status(201).send({
       status: true,
       message: "data created",
       data: {
-        id: rlTigaTitikTIgaID,
+        id: resultInsertHeader.id,
       },
     });
   } catch (error) {
-    await transaction.rollback();
-    if (error.name == "SequelizeForeignKeyConstraintError") {
+    console.log(error)
+    await transaction.rollback()
+    if (error.name === 'SequelizeUniqueConstraintError') {
       res.status(400).send({
         status: false,
-        message: "Gagal Input Data, Jenis Kegiatan Salah.",
-        data: error,
-      });
+        message: "Duplicate Entry"
+      })
     } else {
-      console.log(error);
       res.status(400).send({
         status: false,
-        message: error,
-      });
+        message: error
+      })
     }
-    // if (transaction) {
-    //   if (error.name == "SequelizeForeignKeyConstraintError") {
-    //     res.status(400).send({
-    //       status: false,
-    //       message: "Gagal Input Data, Jenis Kegiatan Salah.",
-    //       data: error,
-    //     });
-    //   } else {
-    //     console.log(error);
-    //     res.status(400).send({
-    //       status: false,
-    //       message: error,
-    //     });
-    //   }
-    //   await transaction.rollback();
-    // }
   }
-};
+}
 
 // Done
 // export const updateDataRLTigaTitikTiga = async (req, res) => {
