@@ -354,9 +354,8 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
     return;
   }
 
-  let transaction;
+  const transaction = await databaseSIRS.transaction()
   try {
-    transaction = await databaseSIRS.transaction();
     const resultInsertHeader = await rlTigaTitikTiga.create(
       {
         rs_id: req.user.rsId,
