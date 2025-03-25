@@ -397,7 +397,21 @@ export const insertDataRLTigaTitikTiga = async (req, res) => {
     await rlTigaTitikTigaDetail.bulkCreate(
       dataDetail,
       {
-        transaction: transaction
+        transaction: transaction,
+        updateOnDuplicate: [
+          "total_pasien_rujukan",
+          "total_pasien_non_rujukan",
+          "tlp_dirawat",
+          "tlp_dirujuk",
+          "tlp_pulang",
+          "m_igd_laki",
+          "m_igd_perempuan",
+          "doa_laki",
+          "doa_perempuan",
+          "luka_laki",
+          "luka_perempuan",
+          "false_emergency",
+        ],
       }
     );
 
