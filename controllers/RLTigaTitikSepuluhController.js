@@ -208,35 +208,45 @@ export const insertDataRLTigaTitikSepuluh = async (req, res) => {
     return;
   }
 
-  let transaction;
+  const transaction = await databaseSIRS.transaction()
 
   try {
-    transaction = await databaseSIRS.transaction();
-    let rlTigaTitikSepuluhID;
+    // transaction = await databaseSIRS.transaction();
+    // let rlTigaTitikSepuluhID;
 
-    const dataExisted = await rlTigaTitikSepuluh.findOne({
-      where: {
+    // const dataExisted = await rlTigaTitikSepuluh.findOne({
+    //   where: {
+    //     tahun: req.body.tahun,
+    //     bulan: req.body.bulan,
+    //     user_id: req.user.id,
+    //   },
+    // });
+
+    // if (dataExisted) {
+    //   rlTigaTitikSepuluhID = dataExisted.id;
+    // } else {
+    //   const rlInsertHeader = await rlTigaTitikSepuluh.create(
+    //     {
+    //       rs_id: req.user.satKerId,
+    //       user_id: req.user.id,
+    //       tahun: req.body.tahun,
+    //       bulan: req.body.bulan,
+    //     },
+    //     { transaction }
+    //   );
+
+    //   rlTigaTitikSepuluhID = rlInsertHeader.id;
+    // }
+
+    const rlInsertHeader = await rlTigaTitikSepuluh.create(
+      {
+        rs_id: req.user.satKerId,
+        user_id: req.user.id,
         tahun: req.body.tahun,
         bulan: req.body.bulan,
-        user_id: req.user.id,
       },
-    });
-
-    if (dataExisted) {
-      rlTigaTitikSepuluhID = dataExisted.id;
-    } else {
-      const rlInsertHeader = await rlTigaTitikSepuluh.create(
-        {
-          rs_id: req.user.satKerId,
-          user_id: req.user.id,
-          tahun: req.body.tahun,
-          bulan: req.body.bulan,
-        },
-        { transaction }
-      );
-
-      rlTigaTitikSepuluhID = rlInsertHeader.id;
-    }
+      { transaction }
+    );
 
     const dataDetail = req.body.data.map((value, index) => {
       const now = new Date();
@@ -245,7 +255,7 @@ export const insertDataRLTigaTitikSepuluh = async (req, res) => {
         tahun: `${req.body.tahun}-${req.body.bulan}-${date}`,
         bulan: req.body.bulan,
         rs_id: req.user.satKerId,
-        rl_tiga_titik_sepuluh_id: rlTigaTitikSepuluhID,
+        rl_tiga_titik_sepuluh_id: rlInsertHeader.id,
         jenis_spesialis_rl_tiga_titik_sepuluh_id:
           value.jenisSpesialisTigaTitikSepuluhId,
         rm_diterima_puskesmas: value.rm_diterima_puskesmas,
@@ -285,24 +295,37 @@ export const insertDataRLTigaTitikSepuluh = async (req, res) => {
       status: true,
       message: "data created",
       data: {
-        id: rlTigaTitikSepuluhID,
+        id: rlInsertHeader.id,
       },
     });
   } catch (error) {
-    if (transaction) {
-      if (error.name == "SequelizeForeignKeyConstraintError") {
-        res.status(400).send({
-          status: false,
-          message: "Gagal Input Data, Jenis Spesialisasi Salah.",
-        });
-      } else {
-        res.status(400).send({
-          status: false,
-          message: error,
-        });
-      }
-      await transaction.rollback();
+    console.log(error)
+    await transaction.rollback()
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      res.status(400).send({
+        status: false,
+        message: "Duplicate Entry"
+      })
+    } else {
+      res.status(400).send({
+        status: false,
+        message: error
+      })
     }
+    // if (transaction) {
+    //   if (error.name == "SequelizeForeignKeyConstraintError") {
+    //     res.status(400).send({
+    //       status: false,
+    //       message: "Gagal Input Data, Jenis Spesialisasi Salah.",
+    //     });
+    //   } else {
+    //     res.status(400).send({
+    //       status: false,
+    //       message: error,
+    //     });
+    //   }
+    //   await transaction.rollback();
+    // }
   }
 };
 
