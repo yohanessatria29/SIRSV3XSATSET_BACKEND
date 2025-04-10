@@ -465,10 +465,14 @@ export const updateDataRLTigaTitikSepuluh = async (req, res) => {
     );
     res.status(200).json({
       status: true,
-      message: update,
+      message: "Data berhasil diperbaharui.",
     });
   } catch (error) {
-    console.log(error.message);
+    // console.log(error.message);
+    res.status(500).send({
+      status: false,
+      message: "Gagal Memperbaharui Data" + error,
+    });
   }
 };
 
