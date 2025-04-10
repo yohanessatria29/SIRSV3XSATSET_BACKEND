@@ -208,7 +208,7 @@ export const insertDataRLTigaTitikSepuluh = async (req, res) => {
     return;
   }
 
-  const transaction = await databaseSIRS.transaction()
+  const transaction = await databaseSIRS.transaction();
 
   try {
     // transaction = await databaseSIRS.transaction();
@@ -299,18 +299,18 @@ export const insertDataRLTigaTitikSepuluh = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error)
-    await transaction.rollback()
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    console.log(error);
+    await transaction.rollback();
+    if (error.name === "SequelizeUniqueConstraintError") {
       res.status(400).send({
         status: false,
-        message: "Duplicate Entry"
-      })
+        message: "Duplicate Entry",
+      });
     } else {
       res.status(400).send({
         status: false,
-        message: error
-      })
+        message: error,
+      });
     }
     // if (transaction) {
     //   if (error.name == "SequelizeForeignKeyConstraintError") {
@@ -356,87 +356,119 @@ export const updateDataRLTigaTitikSepuluh = async (req, res) => {
     return;
   }
 
-  let transaction;
+  // let transaction;
+  // try {
+  //   transaction = await databaseSIRS.transaction();
+
+  //   const existingData = await rlTigaTitikSepuluhDetail.findOne({
+  //     where: {
+  //       id: req.params.id,
+  //       rs_id: req.user.satKerId,
+  //     },
+  //   });
+
+  //   if (existingData) {
+  //     if (existingData.rm_diterima_puskesmas !== req.body.rm_diterima_puskesmas)
+  //       existingData.rm_diterima_puskesmas = req.body.rm_diterima_puskesmas;
+  //     if (existingData.rm_diterima_rs !== req.body.rm_diterima_rs)
+  //       existingData.rm_diterima_rs = req.body.rm_diterima_rs;
+  //     if (
+  //       existingData.rm_diterima_faskes_lain !==
+  //       req.body.rm_diterima_faskes_lain
+  //     )
+  //       existingData.rm_diterima_faskes_lain = req.body.rm_diterima_faskes_lain;
+  //     if (existingData.rm_diterima_total_rm !== req.body.rm_diterima_total_rm)
+  //       existingData.rm_diterima_total_rm = req.body.rm_diterima_total_rm;
+  //     if (
+  //       existingData.rm_dikembalikan_puskesmas !==
+  //       req.body.rm_dikembalikan_puskesmas
+  //     )
+  //       existingData.rm_dikembalikan_puskesmas =
+  //         req.body.rm_dikembalikan_puskesmas;
+  //     if (existingData.rm_dikembalikan_rs !== req.body.rm_dikembalikan_rs)
+  //       existingData.rm_dikembalikan_rs = req.body.rm_dikembalikan_rs;
+  //     if (
+  //       existingData.rm_dikembalikan_faskes_lain !==
+  //       req.body.rm_dikembalikan_faskes_lain
+  //     )
+  //       existingData.rm_dikembalikan_faskes_lain =
+  //         req.body.rm_dikembalikan_faskes_lain;
+  //     if (
+  //       existingData.rm_dikembalikan_total_rm !==
+  //       req.body.rm_dikembalikan_total_rm
+  //     )
+  //       existingData.rm_dikembalikan_total_rm =
+  //         req.body.rm_dikembalikan_total_rm;
+  //     if (existingData.keluar_pasien_rujukan !== req.body.keluar_pasien_rujukan)
+  //       existingData.keluar_pasien_rujukan = req.body.keluar_pasien_rujukan;
+  //     if (
+  //       existingData.keluar_pasien_datang_sendiri !==
+  //       req.body.keluar_pasien_datang_sendiri
+  //     )
+  //       existingData.keluar_pasien_datang_sendiri =
+  //         req.body.keluar_pasien_datang_sendiri;
+  //     if (existingData.keluar_total_keluar !== req.body.keluar_total_keluar)
+  //       existingData.keluar_total_keluar = req.body.keluar_total_keluar;
+  //     if (
+  //       existingData.keluar_diterima_kembali !==
+  //       req.body.keluar_diterima_kembali
+  //     )
+  //       existingData.keluar_diterima_kembali = req.body.keluar_diterima_kembali;
+
+  //     await existingData.save();
+  //     await transaction.commit();
+
+  //     res.status(201).send({
+  //       status: true,
+  //       message: "Data berhasil diperbaharui.",
+  //     });
+  //   } else {
+  //     await transaction.rollback();
+  //     res.status(400).send({
+  //       status: false,
+  //       message: "Data tidak ditemukan",
+  //     });
+  //   }
+  // } catch (error) {
+  //   if (transaction) {
+  //     await transaction.rollback();
+  //   }
+  //   res.status(500).send({
+  //     status: false,
+  //     message: "Gagal Memperbaharui Data",
+  //   });
+  // }
+
   try {
-    transaction = await databaseSIRS.transaction();
-
-    const existingData = await rlTigaTitikSepuluhDetail.findOne({
-      where: {
-        id: req.params.id,
-        rs_id: req.user.satKerId,
+    const update = await rlTigaTitikSepuluhDetail.update(
+      {
+        rm_diterima_puskesmas: req.body.rm_diterima_puskesmas,
+        rm_diterima_rs: req.body.rm_diterima_rs,
+        rm_diterima_faskes_lain: req.body.rm_diterima_faskes_lain,
+        rm_diterima_total_rm: req.body.rm_diterima_total_rm,
+        rm_dikembalikan_puskesmas: req.body.rm_dikembalikan_puskesmas,
+        rm_dikembalikan_rs: req.body.rm_dikembalikan_rs,
+        rm_dikembalikan_faskes_lain: req.body.rm_dikembalikan_faskes_lain,
+        rm_dikembalikan_total_rm: req.body.rm_dikembalikan_total_rm,
+        keluar_pasien_rujukan: req.body.keluar_pasien_rujukan,
+        keluar_pasien_datang_sendiri: req.body.keluar_pasien_datang_sendiri,
+        keluar_total_keluar: req.body.keluar_total_keluar,
+        keluar_diterima_kembali: req.body.keluar_diterima_kembali,
+        user_id: req.user.id,
       },
+      {
+        where: {
+          id: req.params.id,
+          rs_id: req.user.satKerId,
+        },
+      }
+    );
+    res.status(200).json({
+      status: true,
+      message: update,
     });
-
-    if (existingData) {
-      if (existingData.rm_diterima_puskesmas !== req.body.rm_diterima_puskesmas)
-        existingData.rm_diterima_puskesmas = req.body.rm_diterima_puskesmas;
-      if (existingData.rm_diterima_rs !== req.body.rm_diterima_rs)
-        existingData.rm_diterima_rs = req.body.rm_diterima_rs;
-      if (
-        existingData.rm_diterima_faskes_lain !==
-        req.body.rm_diterima_faskes_lain
-      )
-        existingData.rm_diterima_faskes_lain = req.body.rm_diterima_faskes_lain;
-      if (existingData.rm_diterima_total_rm !== req.body.rm_diterima_total_rm)
-        existingData.rm_diterima_total_rm = req.body.rm_diterima_total_rm;
-      if (
-        existingData.rm_dikembalikan_puskesmas !==
-        req.body.rm_dikembalikan_puskesmas
-      )
-        existingData.rm_dikembalikan_puskesmas =
-          req.body.rm_dikembalikan_puskesmas;
-      if (existingData.rm_dikembalikan_rs !== req.body.rm_dikembalikan_rs)
-        existingData.rm_dikembalikan_rs = req.body.rm_dikembalikan_rs;
-      if (
-        existingData.rm_dikembalikan_faskes_lain !==
-        req.body.rm_dikembalikan_faskes_lain
-      )
-        existingData.rm_dikembalikan_faskes_lain =
-          req.body.rm_dikembalikan_faskes_lain;
-      if (
-        existingData.rm_dikembalikan_total_rm !==
-        req.body.rm_dikembalikan_total_rm
-      )
-        existingData.rm_dikembalikan_total_rm =
-          req.body.rm_dikembalikan_total_rm;
-      if (existingData.keluar_pasien_rujukan !== req.body.keluar_pasien_rujukan)
-        existingData.keluar_pasien_rujukan = req.body.keluar_pasien_rujukan;
-      if (
-        existingData.keluar_pasien_datang_sendiri !==
-        req.body.keluar_pasien_datang_sendiri
-      )
-        existingData.keluar_pasien_datang_sendiri =
-          req.body.keluar_pasien_datang_sendiri;
-      if (existingData.keluar_total_keluar !== req.body.keluar_total_keluar)
-        existingData.keluar_total_keluar = req.body.keluar_total_keluar;
-      if (
-        existingData.keluar_diterima_kembali !==
-        req.body.keluar_diterima_kembali
-      )
-        existingData.keluar_diterima_kembali = req.body.keluar_diterima_kembali;
-
-      await existingData.save();
-      await transaction.commit();
-
-      res.status(201).send({
-        status: true,
-        message: "Data berhasil diperbaharui.",
-      });
-    } else {
-      await transaction.rollback();
-      res.status(400).send({
-        status: false,
-        message: "Data tidak ditemukan",
-      });
-    }
   } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
-    res.status(500).send({
-      status: false,
-      message: "Gagal Memperbaharui Data",
-    });
+    console.log(error.message);
   }
 };
 
