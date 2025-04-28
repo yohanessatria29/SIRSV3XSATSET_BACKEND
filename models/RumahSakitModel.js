@@ -61,9 +61,9 @@ export const show = (id, callback) => {
         'db_fasyankes.`kab_kota`.nama as kab_kota_nama, ' +
         'db_fasyankes.`provinsi`.nama as provinsi_nama ' +
         'FROM ' +
-        'db_fasyankes.`data` INNER JOIN db_fasyankes.provinsi ON db_fasyankes.provinsi.id = db_fasyankes.`data`.provinsi_id ' +
-        'INNER JOIN db_fasyankes.kab_kota ON db_fasyankes.kab_kota.id = db_fasyankes.`data`.kab_kota_id ' +
-        'WHERE db_fasyankes.`data`.Propinsi IN ( ? )'
+        'db_fasyankes.`data` LEFT OUTER JOIN db_fasyankes.provinsi ON db_fasyankes.provinsi.id = db_fasyankes.`data`.provinsi_id ' +
+        'LEFT OUTER JOIN db_fasyankes.kab_kota ON db_fasyankes.kab_kota.id = db_fasyankes.`data`.kab_kota_id ' +
+        'WHERE db_fasyankes.`data`.Propinsi IN (?)'
 
     const sqlFilterValue = [id]
     databaseRSOnline.query(sql, {
