@@ -89,11 +89,17 @@ export const get = (req, callback) => {
         'SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_hidup + ' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam) AS ALOS, ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam +  ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam +'+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam'+
+        ') AS ALOS, ' +
         'SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_hidup + ' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam) /  ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam +  ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + '+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam'+
+        ') /  ' +
         'SUM( rl_tiga_titik_dua_detail.jumlah_alokasi_tempat_tidur_awal_bulan ) AS BTO, ' +
         '(((SUM( rl_tiga_titik_dua_detail.jumlah_alokasi_tempat_tidur_awal_bulan ) * DAY(LAST_DAY(periode))) -  ' +
         'SUM( ' +
@@ -106,19 +112,33 @@ export const get = (req, callback) => {
         'SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_hidup + ' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam)) TOI, ' +
-        'SUM(rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam) /  ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam + ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam' +
+        ')) TOI, ' +
+        'SUM(rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + '+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam '+
+        ') /  ' +
         '(SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_hidup + ' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam)) * 1000 AS NDR, ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam +  ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + '+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam '+
+        ')) * 1000 AS NDR, ' +
         'SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam) / ' +
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam +  ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + '+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam '+
+        ') / ' +
         'SUM(' +
         'rl_tiga_titik_dua_detail.pasien_keluar_hidup + ' +
         'rl_tiga_titik_dua_detail.pasien_keluar_mati_kurang_dari_48_jam +  ' +
-        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam) * 1000 AS GDR '
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_kurang_dari_48_jam +  ' +
+        'rl_tiga_titik_dua_detail.pasien_keluar_mati_lebih_dari_atau_sama_dengan_48_jam + '+
+        'rl_tiga_titik_dua_detail.pasien_wanita_keluar_mati_lebih_dari_atau_sama_dengan_48_jam '+
+        ') * 1000 AS GDR '
 
     const sqlFrom = 'FROM ' +
         'rl_tiga_titik_dua_detail ' +
