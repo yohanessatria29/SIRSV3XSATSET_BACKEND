@@ -320,14 +320,14 @@ export const loginSSO = async (req, res) => {
             rs_id: rs_id,
             is_active: 1,
           },
-          include: [
-            {
-              model: satu_sehat_id,
-              as: "satuSehat",
-              attributes: ["organization_id"],
-              required: false,
-            },
-          ],
+          // include: [
+          //   {
+          //     model: satu_sehat_id,
+          //     as: "satuSehat",
+          //     attributes: ["organization_id"],
+          //     required: false,
+          //   },
+          // ],
         })
         .then((results) => {
           if (!results.length) {
@@ -339,15 +339,15 @@ export const loginSSO = async (req, res) => {
             });
             return;
           }
-          const mappedResults = results.map((user) => {
-            const plain = user.get({ plain: true });
-            return {
-              ...plain,
-              organization_id: plain.satuSehat
-                ? plain.satuSehat.organization_id
-                : null,
-            };
-          });
+          // const mappedResults = results.map((user) => {
+          //   const plain = user.get({ plain: true });
+          //   return {
+          //     ...plain,
+          //     organization_id: plain.satuSehat
+          //       ? plain.satuSehat.organization_id
+          //       : null,
+          //   };
+          // });
 
           const payloadObject = {
             id: results[0].id,
@@ -356,11 +356,12 @@ export const loginSSO = async (req, res) => {
             // email: results[0].email,
             satKerId: results[0].rs_id,
             jenisUserId: results[0].jenis_user_id,
-            organizationId: mappedResults[0].organization_id,
+            // organizationId: mappedResults[0].organization_id,
           };
 
           const payloadObjectRefreshToken = {
             id: results[0].id,
+            id_user_sso: id_user_sso,
           };
           const accessToken = jsonWebToken.sign(
             payloadObject,

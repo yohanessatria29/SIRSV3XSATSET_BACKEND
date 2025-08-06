@@ -6,6 +6,10 @@ import {
   rlLimaTitikSatuDetail,
   rlLimaTitikSatuHeader,
 } from "../models/RLLimaTitikSatuModel.js";
+import { satu_sehat_id, users_sso } from "../models/UserModel.js";
+import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const getDataRLLimaTitikSatu = (req, res) => {
   const joi = Joi.extend(joiDate);
@@ -104,25 +108,104 @@ export const getDataRLLimaTitikSatuById = (req, res) => {
     });
 };
 
-export const getDataRLLimaTitikSatuSatuSehat = (req, res) => {
+export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
   const joi = Joi.extend(joiDate);
   const schema = joi.object({
+    rsId: joi.string().required(),
     periode: joi.date().format("YYYY-MM").required(),
     page: joi.number(),
     limit: joi.number(),
   });
+
   const { error, value } = schema.validate(req.query);
   if (error) {
-    res.status(404).send({
+    return res.status(404).send({
       status: false,
       message: error.details[0].message,
     });
-    return;
   }
 
-  const organizationId = req.user.organizationId;
+  if (req.user.jenisUserId == 4) {
+    if (req.query.rsId != req.user.satKerId) {
+      return res.status(404).send({
+        status: false,
+        message: "Kode RS Tidak Sesuai",
+      });
+    }
 
-  console.log(organizationId);
+    // USER RS
+    const koders = req.user.satKerId;
+    const periodeget = req.query.periode;
+
+    try {
+      const satuSehat = await satu_sehat_id.findOne({
+        where: { kode_baru_faskes: koders },
+        attributes: ["organization_id"],
+      });
+
+      if (!satuSehat) {
+        return res.status(404).send({
+          status: false,
+          message: "OrganizationId Tidak Ada",
+        });
+      }
+
+      const organization_id = satuSehat.organization_id;
+
+      const response = await axios.get(
+        `${process.env.SATUSEHAT_BASE_URL}/v1/rlreport/rl51?month=${periodeget}&organization_id=${organization_id}`,
+        {
+          headers: {
+            "X-API-Key": process.env.SATUSEHAT_API_KEY,
+          },
+        }
+      );
+
+      // console.log(response);
+
+      // lanjut proses GET DATA KE SATSET
+
+      res.status(200).send({
+        status: true,
+        message: "data found",
+        data: response.data,
+      });
+    } catch (err) {
+      // Kalau error dari axios (seperti 404)
+      if (err.response) {
+        const statusCode = err.response.status;
+        const errorMessage =
+          err.response.data?.message || "Error from external API";
+
+        if (statusCode === 404) {
+          return res.status(404).json({
+            status: false,
+            message: errorMessage,
+            detail: "Data tidak ditemukan dari API Satusehat",
+          });
+        }
+
+        // Untuk error lain dari API
+        return res.status(statusCode).json({
+          status: false,
+          message: errorMessage,
+          detail: "Error dari Satusehat",
+        });
+      }
+
+      // Untuk error umum (misalnya timeout, DNS error, dll)
+      return res.status(500).json({
+        status: false,
+        message: "Gagal mengambil data dari Satusehat",
+        detail: error.message,
+      });
+    }
+  } else {
+    return res.status(404).send({
+      status: false,
+      message: "Untuk Dinkes belum bisa menarik data",
+    });
+  }
 };
 
 export const insertdataRLLimaTitikSatu = async (req, res) => {
