@@ -1,12 +1,23 @@
-import { users, users_sso, insert, show } from "../models/UserModel.js";
+import {
+  users,
+  users_sso,
+  insert,
+  show,
+  satu_sehat_id,
+} from "../models/UserModel.js";
 import axios from "axios";
 import crypto from "crypto";
+import dotenv from "dotenv";
+
 import bcrypt from "bcrypt";
 import jsonWebToken from "jsonwebtoken";
 import Joi from "joi";
 import passwordValidator from "password-validator";
 import { Sequelize } from "sequelize";
 const Op = Sequelize.Op;
+const SSO_BASE_URL = process.env.SSO_BASE_URL;
+
+dotenv.config();
 
 export const getUser = (req, res) => {
   users_sso
@@ -155,9 +166,9 @@ export const login = async (req, res) => {
                 .then(() => {
                   res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    sameSite: 'Strict',
-                    secure: true, 
-                    maxAge: 6 * 60 * 60 * 1000
+                    sameSite: "Strict",
+                    secure: true,
+                    maxAge: 6 * 60 * 60 * 1000,
                   });
                   res.status(201).send({
                     status: true,
@@ -272,116 +283,160 @@ export const login = async (req, res) => {
 export const loginSSO = async (req, res) => {
   const token = req.query.token;
   try {
+    // const response = await axios.get(
+    //   "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+    //     token +
+    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
+    // );
+
     const response = await axios.get(
-      "https://akun-yankes.kemkes.go.id/sso/v1/token?value=" +
+      `${SSO_BASE_URL}/sso/v1/token?value=` +
         token +
         "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
     );
 
-    // const response = await axios.get(
-    //   "http://192.168.50.86/sso/v1/token?value=" +
-    //     token +
-    //     "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
-    // );
-    const email_sso = response.data.data.email;
+    const encrypted = response.data.data; // ambil iv, ciphertext, tag
 
-    users_sso
-      .findAll({
-        attributes: [
-          "id",
-          "nama",
-          "email",
-          "password",
-          "rs_id",
-          "jenis_user_id",
-          "created_at",
-          "modified_at",
-        ],
-        where: {
-          email: email_sso,
-          is_active: 1,
-        },
-      })
-      .then((results) => {
-        if (!results.length) {
+    try {
+      const plainText = decrypt(encrypted);
+      const parsed = JSON.parse(plainText);
+      const email_sso = parsed.email;
+      const rs_id = parsed.organizationId;
+      const id_user_sso = parsed.id;
+
+      users_sso
+        .findAll({
+          attributes: [
+            "id",
+            "nama",
+            "email",
+            "password",
+            "rs_id",
+            "jenis_user_id",
+            "created_at",
+            "modified_at",
+          ],
+          where: {
+            rs_id: rs_id,
+            is_active: 1,
+          },
+          include: [
+            {
+              model: satu_sehat_id,
+              as: "satuSehat",
+              attributes: ["organization_id"],
+              required: false,
+            },
+          ],
+        })
+        .then((results) => {
+          if (!results.length) {
+            // console.log("buat akun baru");
+
+            res.status(404).send({
+              status: false,
+              message: "Kode RS tidak ada",
+            });
+            return;
+          }
+          const mappedResults = results.map((user) => {
+            const plain = user.get({ plain: true });
+            return {
+              ...plain,
+              organization_id: plain.satuSehat
+                ? plain.satuSehat.organization_id
+                : null,
+            };
+          });
+
+          const payloadObject = {
+            id: results[0].id,
+            id_user_sso: id_user_sso,
+            nama: results[0].nama,
+            // email: results[0].email,
+            satKerId: results[0].rs_id,
+            jenisUserId: results[0].jenis_user_id,
+            organizationId: mappedResults[0].organization_id,
+          };
+
+          const payloadObjectRefreshToken = {
+            id: results[0].id,
+          };
+          const accessToken = jsonWebToken.sign(
+            payloadObject,
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: process.env.ACCESS_TOKEN_EXPIRESIN }
+          );
+          jsonWebToken.verify(
+            accessToken,
+            process.env.ACCESS_TOKEN_SECRET,
+            (err, result) => {
+              const refreshToken = jsonWebToken.sign(
+                payloadObjectRefreshToken,
+                process.env.REFRESH_TOKEN_SECRET,
+                { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
+              );
+              users_sso
+                .update(
+                  { refresh_token: refreshToken },
+                  {
+                    where: {
+                      id: results[0].id,
+                    },
+                  }
+                )
+                .then(() => {
+                  const isSecure = process.env.COOKIE_SECURE === "true"; // convert string to boolean
+
+                  res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    sameSite: "Strict",
+                    secure: isSecure,
+                    maxAge: 6 * 60 * 60 * 1000,
+                  });
+                  const csrfToken = crypto.randomUUID();
+                  res.cookie("XSRF-TOKEN", csrfToken, {
+                    httpOnly: true,
+                    sameSite: "Strict", // atau 'Lax' tergantung kebutuhan
+                    secure: true,
+                  });
+                  res.status(201).send({
+                    status: true,
+                    message: "access token created",
+                    data: {
+                      access_token: accessToken,
+                      csrfToken: csrfToken,
+                    },
+                  });
+                })
+                .catch((err) => {
+                  res.status(404).send({
+                    status: false,
+                    message: err,
+                  });
+                  return;
+                });
+            }
+          );
+        })
+        .catch((err) => {
           res.status(404).send({
             status: false,
-            message: "email not found",
+            message: err,
           });
           return;
-        }
-        const payloadObject = {
-          id: results[0].id,
-          nama: results[0].nama,
-          email: results[0].email,
-          satKerId: results[0].rs_id,
-          jenisUserId: results[0].jenis_user_id,
-        };
-        const payloadObjectRefreshToken = {
-          id: results[0].id,
-        };
-        const accessToken = jsonWebToken.sign(
-          payloadObject,
-          process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: process.env.ACCESS_TOKEN_EXPIRESIN }
-        );
-        jsonWebToken.verify(
-          accessToken,
-          process.env.ACCESS_TOKEN_SECRET,
-          (err, result) => {
-            const refreshToken = jsonWebToken.sign(
-              payloadObjectRefreshToken,
-              process.env.REFRESH_TOKEN_SECRET,
-              { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
-            );
-            users_sso
-              .update(
-                { refresh_token: refreshToken },
-                {
-                  where: {
-                    id: results[0].id,
-                  },
-                }
-              )
-              .then(() => {
-                res.cookie("refreshToken", refreshToken, {
-                  httpOnly: true,
-                  sameSite: 'Strict',
-                  secure: true, 
-                  maxAge: 6 * 60 * 60 * 1000
-                });
-                const csrfToken = crypto.randomUUID();
-                res.cookie("XSRF-TOKEN", csrfToken, {
-                  httpOnly: true,
-                  sameSite: "Strict", // atau 'Lax' tergantung kebutuhan
-                  secure: true,
-                });
-                res.status(201).send({
-                  status: true,
-                  message: "access token created",
-                  data: {
-                    access_token: accessToken,
-                    csrfToken: csrfToken,
-                  },
-                });
-              })
-              .catch((err) => {
-                res.status(404).send({
-                  status: false,
-                  message: err,
-                });
-                return;
-              });
-          }
-        );
-      })
-      .catch((err) => {
-        res.status(404).send({
-          status: false,
-          message: err,
         });
-        return;
+    } catch (e) {
+      res.status(400).send({
+        status: false,
+        message: e.message,
       });
+      return;
+    }
+
+    // const email_sso = response.data.data.email;
+
+    // users_sso
   } catch (error) {
     res.status(400).send({
       status: false,
@@ -389,6 +444,22 @@ export const loginSSO = async (req, res) => {
     });
     return;
   }
+};
+
+export const decrypt = ({ iv, ciphertext, tag }) => {
+  const key = Buffer.from(process.env.AES_KEY, "base64");
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    key,
+    Buffer.from(iv, "base64")
+  );
+
+  decipher.setAuthTag(Buffer.from(tag, "base64"));
+
+  let decrypted = decipher.update(Buffer.from(ciphertext, "base64"));
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+  return decrypted.toString("utf8");
 };
 
 export const loginSSOAdmin = async (req, res) => {
@@ -403,7 +474,7 @@ export const loginSSOAdmin = async (req, res) => {
     // );
 
     const response = await axios.get(
-      "http://192.168.50.86/sso/v1/token?value=" +
+      `${SSO_BASE_URL}/sso/v1/token?value=` +
         token +
         "&serviceProviderId=UfXjipowQNdlVoeU3lpE"
     );
@@ -523,8 +594,8 @@ export const logout = (req, res) => {
     return;
   }
   res.clearCookie("refreshToken");
-  res.clearCookie('XSRF-TOKEN')
-  res.clearCookie('connect.sid')
+  res.clearCookie("XSRF-TOKEN");
+  res.clearCookie("connect.sid");
   res.sendStatus(200);
 
   //   users_sso

@@ -104,6 +104,27 @@ export const getDataRLLimaTitikSatuById = (req, res) => {
     });
 };
 
+export const getDataRLLimaTitikSatuSatuSehat = (req, res) => {
+  const joi = Joi.extend(joiDate);
+  const schema = joi.object({
+    periode: joi.date().format("YYYY-MM").required(),
+    page: joi.number(),
+    limit: joi.number(),
+  });
+  const { error, value } = schema.validate(req.query);
+  if (error) {
+    res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+    return;
+  }
+
+  const organizationId = req.user.organizationId;
+
+  console.log(organizationId);
+};
+
 export const insertdataRLLimaTitikSatu = async (req, res) => {
   const schema = Joi.object({
     periodeBulan: Joi.number().greater(0).less(13).required(),

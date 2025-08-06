@@ -300,6 +300,7 @@ import {
   getDataRLLimaTitikSatuById,
   insertdataRLLimaTitikSatu,
   updateDataRLLimaTitikSatu,
+  getDataRLLimaTitikSatuSatuSehat,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -1110,6 +1111,12 @@ router.delete(
   verifyCsrfToken,
   verifyToken,
   deleteDataRLLimaTitikSatu
+);
+
+router.get(
+  "/apisirs6v2/rllimatitiksatusatusehat",
+  verifyToken,
+  getDataRLLimaTitikSatuSatuSehat
 );
 
 // RL 5.3

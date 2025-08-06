@@ -53,6 +53,7 @@ import jsonWebToken from "jsonwebtoken";
 // };
 
 export const refreshToken = (req, res) => {
+  // console.log(req.cookies);
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
     res.status(403).json({
