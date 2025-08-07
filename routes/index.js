@@ -10,8 +10,10 @@ import {
   loginSSOAdmin,
   logout,
   changePassword,
+  loginBridgingDev,
+  loginBridging,
 } from "../controllers/UsersController.js";
-import { verifyToken } from "../middleware/VerifyToken.js";
+import { verifyToken, verifyTokenBridge } from "../middleware/VerifyToken.js";
 import { verifyCsrfToken } from "../middleware/VerifyCsrfToken.js";
 
 import { refreshToken } from "../controllers/RefreshTokenController.js";
@@ -52,6 +54,7 @@ import {
   insertDataRLTigaTitikLima,
   updateDataRLTigaTitikLima,
   deleteDataRLTigaTitikLima,
+  getDataRLTigaTitikLimaSatuSehat,
 } from "../controllers/RLTigaTitikLimaController.js";
 
 // RL 3.6
@@ -321,6 +324,10 @@ import { getRLLimatitikTiga } from "../controllers/RLLimaTitikTigaController.js"
 // Absensi
 
 import { insertValidasi } from "../controllers/ValidasiController.js";
+import { getApiRegistrations, getRegistrationDetail, insertApiRegistration, userVerifApiRegistration } from "../controllers/ApiRegistrationController.js";
+import { getApiKeyDevelopment, reviewRegistration } from "../controllers/ApiKeyDevelopmentController.js";
+import { insertApiProductionRequest } from "../controllers/ApiProductionRequestControlller.js";
+import { reviewProductionRequest } from "../controllers/ApiKeyProductionController.js";
 
 const router = express.Router();
 
@@ -489,6 +496,14 @@ router.patch(
   verifyToken,
   updateDataRLTigaTitikLima
 );
+
+
+router.get(
+  "/apisirs6v2/rltigatitiklimasatusehat",
+  verifyToken,
+  getDataRLTigaTitikLimaSatuSehat
+);
+
 
 // Jenis Kegiatan
 router.get(
@@ -1124,5 +1139,59 @@ router.get("/apisirs6v2/rllimatitikdua", verifyToken, getRLLimaTitikDua);
 
 // RL 5.3
 router.get("/apisirs6v2/rllimatitiktiga", verifyToken, getRLLimatitikTiga);
+
+
+
+
+
+// REGISTRASI BRIDGING DAN API BRIDGING
+
+// User & Admin Registrasi API
+router.get("/apisirs6v2/apiregistration", verifyToken, getApiRegistrations);
+router.get("/apisirs6v2/apikeydevelopment", verifyToken, getApiKeyDevelopment);
+
+
+// User Registrasi API
+router.get("/apisirs6v2/apiregistrationdetail", verifyToken, getRegistrationDetail);
+router.post("/apisirs6v2/apiregistration", verifyToken, insertApiRegistration);
+router.get("/apisirs6v2/apiregistration/verifikasiemail/:token", userVerifApiRegistration);
+router.post("/apisirs6v2/apiproductionrequest/:apiKeyDevelopmentId", verifyToken, insertApiProductionRequest);
+
+
+//Admin Registration API\
+router.post("/apisirs6v2/apiregistration/review/:registrationId",  verifyToken,reviewRegistration);
+router.post("/apisirs6v2/apiproductionrequest/review/:productionRequestId",  verifyToken,reviewProductionRequest);
+
+
+router.post("/apisirs6v2/external/login",  loginBridgingDev);
+
+router.post("/apisirs6v2/external/login",  loginBridging);
+
+router.get("/apisirs6v2/external/icd/rawat_jalan/find", verifyTokenBridge, getIcdRajalbySearch);
+router.get("/apisirs6v2/external/icd/rawat_inap/find", verifyTokenBridge, getIcdRanapbySearch);
+
+
+// RL 4.1
+router.get("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, getDataRLEmpatTitikSatu);
+
+// RL 4.2
+router.get("/apisirs6v2/external/rlempattitikdua", verifyTokenBridge, getRLEmpatTitikDua);
+
+// RL 4.3
+router.get("/apisirs6v2/external/rlempattitiktiga", verifyTokenBridge, getRLEmpatTitikTiga);
+
+// RL 5.1
+router.get("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, getDataRLLimaTitikSatu);
+
+// RL 5.2
+router.get("/apisirs6v2/external/rllimatitikdua", verifyTokenBridge, getRLLimaTitikDua);
+
+// RL 5.3
+router.get("/apisirs6v2/external/rllimatitiktiga", verifyTokenBridge, getRLLimatitikTiga);
+
+
+
+
+
 
 export default router;

@@ -935,3 +935,300 @@ export const logoutadmin = (req, res) => {
       return;
     });
 };
+
+
+export const loginBridgingDev = async (req, res) => {
+  const schema = Joi.object({
+    apiKey: Joi.string().required(),
+    apiSecret: Joi.string().required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+    return;
+  }
+apiKeyDevelopment
+    .findOne({
+      attributes: [
+        "rs_id",
+        "api_key",
+        "api_secret",
+      ],
+      include: {
+        model: apiRegistration,
+        attributes: ["email_pendaftaran", "nama_aplikasi"],
+        where :{
+          status_pendaftaran : 'diterima',
+        }
+      }, 
+      where: {
+        api_key: req.body.apiKey,
+        api_secret: req.body.apiSecret,
+      },
+    })
+    .then((results) => {
+
+      // console.log("tadaa ",results)
+      if (!results) {
+        res.status(404).send({
+          status: false,
+          message: "user not found1",
+        });
+        return;
+      }
+
+      // console.log("tadaa ",results.api_registration.dataValues.email_pendaftaran)
+      
+      // console.log(results.dataValues)
+      // results.dataValues.api_registration.api_registration.dataValues.email_pendaftaran
+
+      users_sso.findOne({
+        attributes : [
+          "id",
+          "jenis_user_id",
+          "nama",
+          "email",
+          "rs_id",
+        ], 
+        where: {
+          rs_id: results.dataValues.rs_id,
+          email : results.api_registration.dataValues.email_pendaftaran,
+          kriteria_user_id : 2,
+        },
+      })
+      .then((findUserResults) => {
+        // console.log("cih ", findUserResults)
+        if(!findUserResults){
+          res.status(404).send({
+            status: false,
+            message: "user not found2",
+          });
+          return;
+        }
+        
+        const payloadObject = {
+          nama: findUserResults.dataValues.nama,
+          email: findUserResults.dataValues.email,
+          satKerId: findUserResults.dataValues.rs_id,
+        };
+
+        const accessToken = jsonWebToken.sign(
+          payloadObject,
+          process.env.ACCESS_TOKEN_SECRET_BRIDGING,
+          { expiresIn: process.env.ACCESS_TOKEN_EXPIRESIN }
+        );
+        // console.log("tadaa ",findUserResults)
+        
+        jsonWebToken.verify(
+          accessToken,
+          process.env.ACCESS_TOKEN_SECRET_BRIDGING,
+          (err, result) => {
+            const refreshToken = jsonWebToken.sign(
+              payloadObject,
+              process.env.REFRESH_TOKEN_SECRET,
+              { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
+            );
+            users_sso
+              .update(
+                { refresh_token: refreshToken },
+                {
+                  where: {
+                    id: findUserResults.dataValues.id,
+                  },
+                }
+              )
+              .then(() => {
+                res.cookie("refreshToken", refreshToken, {
+                  httpOnly: true,
+                  sameSite: 'Strict',
+                  secure: true, 
+                  maxAge: 6 * 60 * 60 * 1000
+                });
+                console.log("dtatata ", accessToken)
+                res.status(201).send({
+                  status: true,
+                  message: "access token created",
+                  data: {
+                    access_token: accessToken,
+                  },
+                });
+              })
+              .catch((err) => {
+                res.status(404).send({
+                  status: false,
+                  message:  err+"firstt",
+                });
+                return;
+              });
+          }
+        );
+      }).catch((err) => {
+        res.status(404).send({
+          status: false,
+          message:  err+"mid",
+        });
+        return;
+      });
+    })
+    .catch((err) => {
+      res.status(404).send({
+        status: false,
+        message: err+"last",
+      });
+      return;
+    });
+  
+};
+
+export const loginBridging = async (req, res) => {
+  const schema = Joi.object({
+    apiKey: Joi.string().required(),
+    apiSecret: Joi.string().required(),
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+    return;
+  }
+apiKeyDevelopment
+    .findOne({
+      attributes: [
+        "rs_id",
+        "api_key",
+        "api_secret",
+      ],
+      include: {
+        model: apiRegistration,
+        attributes: ["email_pendaftaran", "nama_aplikasi"],
+        where :{
+          status_pendaftaran : 'diterima',
+        }
+      }, 
+      where: {
+        api_key: req.body.apiKey,
+        api_secret: req.body.apiSecret,
+      },
+    })
+    .then((results) => {
+
+      // console.log("tadaa ",results)
+      if (!results) {
+        res.status(404).send({
+          status: false,
+          message: "user not found1",
+        });
+        return;
+      }
+
+      // console.log("tadaa ",results.api_registration.dataValues.email_pendaftaran)
+      
+      // console.log(results.dataValues)
+      // results.dataValues.api_registration.api_registration.dataValues.email_pendaftaran
+
+      users_sso.findOne({
+        attributes : [
+          "id",
+          "jenis_user_id",
+          "nama",
+          "email",
+          "rs_id",
+        ], 
+        where: {
+          rs_id: results.dataValues.rs_id,
+          email : results.api_registration.dataValues.email_pendaftaran,
+          kriteria_user_id : 2,
+        },
+      })
+      .then((findUserResults) => {
+        // console.log("cih ", findUserResults)
+        if(!findUserResults){
+          res.status(404).send({
+            status: false,
+            message: "user not found2",
+          });
+          return;
+        }
+        
+        const payloadObject = {
+          nama: findUserResults.dataValues.nama,
+          email: findUserResults.dataValues.email,
+          satKerId: findUserResults.dataValues.rs_id,
+        };
+
+        const accessToken = jsonWebToken.sign(
+          payloadObject,
+          process.env.ACCESS_TOKEN_SECRET_BRIDGING,
+          { expiresIn: process.env.ACCESS_TOKEN_EXPIRESIN }
+        );
+        // console.log("tadaa ",findUserResults)
+        
+        jsonWebToken.verify(
+          accessToken,
+          process.env.ACCESS_TOKEN_SECRET_BRIDGING,
+          (err, result) => {
+            const refreshToken = jsonWebToken.sign(
+              payloadObject,
+              process.env.REFRESH_TOKEN_SECRET,
+              { expiresIn: process.env.REFRESH_TOKEN_EXPIRESIN }
+            );
+            users_sso
+              .update(
+                { refresh_token: refreshToken },
+                {
+                  where: {
+                    id: findUserResults.dataValues.id,
+                  },
+                }
+              )
+              .then(() => {
+                res.cookie("refreshToken", refreshToken, {
+                  httpOnly: true,
+                  sameSite: 'Strict',
+                  secure: true, 
+                  maxAge: 6 * 60 * 60 * 1000
+                });
+                console.log("dtatata ", accessToken)
+                res.status(201).send({
+                  status: true,
+                  message: "access token created",
+                  data: {
+                    access_token: accessToken,
+                  },
+                });
+              })
+              .catch((err) => {
+                res.status(404).send({
+                  status: false,
+                  message:  err+"firstt",
+                });
+                return;
+              });
+          }
+        );
+      }).catch((err) => {
+        res.status(404).send({
+          status: false,
+          message:  err+"mid",
+        });
+        return;
+      });
+    })
+    .catch((err) => {
+      res.status(404).send({
+        status: false,
+        message: err+"last",
+      });
+      return;
+    });
+  
+};
