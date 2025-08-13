@@ -5,10 +5,12 @@ import joiDate from "@joi/date";
 import {
   rlLimaTitikSatuDetail,
   rlLimaTitikSatuHeader,
+  rlLimaTitikSatuSatuSehat,
 } from "../models/RLLimaTitikSatuModel.js";
 import { satu_sehat_id, users_sso } from "../models/UserModel.js";
 import axios from "axios";
 import dotenv from "dotenv";
+import { AgeGroups } from "../models/AgeGroups.js";
 dotenv.config();
 
 export const getDataRLLimaTitikSatu = (req, res) => {
@@ -153,7 +155,7 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
       const organization_id = satuSehat.organization_id;
 
       const response = await axios.get(
-        `${process.env.SATUSEHAT_BASE_URL}/v1/rlreport/rl51?month=${periodeget}&organization_id=${organization_id}`,
+        `${process.env.SATUSEHAT_BASE_URL}/rl51?month=${periodeget}&organization_id=${organization_id}`,
         {
           headers: {
             "X-API-Key": process.env.SATUSEHAT_API_KEY,
@@ -161,44 +163,102 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
         }
       );
 
-      // console.log(response);
+      // const response = {
+      //   data: {
+      //     records: [
+      //       {
+      //         icd10: "I10",
+      //         diagnosis: "Essential (primary) hypertension",
+      //         new_cases: [
+      //           {
+      //             age_id: "001",
+      //             age_name: "< 1 jam",
+      //             male_new_cases: 20,
+      //             female_new_cases: 22,
+      //           },
+      //           {
+      //             age_id: "002",
+      //             age_name: "1 jam - < 24 jam",
+      //             male_new_cases: 10,
+      //             female_new_cases: 12,
+      //           },
+      //         ],
+      //         male_new_cases: 30,
+      //         female_new_cases: 34,
+      //         total_new_cases: 64,
+      //         male_visits: 100,
+      //         female_visits: 200,
+      //         total_visits: 300,
+      //       },
+      //       {
+      //         icd10: "E11",
+      //         diagnosis: "Type 2 diabetes mellitus",
+      //         new_cases: [
+      //           {
+      //             age_id: "003",
+      //             age_name: "1-4 tahun",
+      //             male_new_cases: 2,
+      //             female_new_cases: 3,
+      //           },
+      //         ],
+      //         male_new_cases: 2,
+      //         female_new_cases: 3,
+      //         total_new_cases: 5,
+      //         male_visits: 4,
+      //         female_visits: 5,
+      //         total_visits: 9,
+      //       },
+      //     ],
+      //   },
+      // };
 
-      // lanjut proses GET DATA KE SATSET
+      // console.log(response.data.data.records);
+
+      const records = response.data?.data?.records;
+
+      // await delay(10000);
+
+      // // SAVE DATA KE DB
+      await saveRecords(records, organization_id, `${periodeget}-01`);
 
       res.status(200).send({
         status: true,
-        message: "data found",
-        data: response.data,
+        message: "Data berhasil diambil dan disimpan",
+        // data: responseData,
       });
+
+      // res.status(200).send({
+      //   status: true,
+      //   message: "data found",
+      //   data: response.data,
+      // });
     } catch (err) {
+      console.log(err);
       // Kalau error dari axios (seperti 404)
-      if (err.response) {
-        const statusCode = err.response.status;
-        const errorMessage =
-          err.response.data?.message || "Error from external API";
-
-        if (statusCode === 404) {
-          return res.status(404).json({
-            status: false,
-            message: errorMessage,
-            detail: "Data tidak ditemukan dari API Satusehat",
-          });
-        }
-
-        // Untuk error lain dari API
-        return res.status(statusCode).json({
-          status: false,
-          message: errorMessage,
-          detail: "Error dari Satusehat",
-        });
-      }
-
-      // Untuk error umum (misalnya timeout, DNS error, dll)
-      return res.status(500).json({
-        status: false,
-        message: "Gagal mengambil data dari Satusehat",
-        detail: error.message,
-      });
+      // if (err.response) {
+      //   const statusCode = err.response.status;
+      //   const errorMessage =
+      //     err.response.data?.message || "Error from external API";
+      //   if (statusCode === 404) {
+      //     return res.status(404).json({
+      //       status: false,
+      //       message: errorMessage,
+      //       detail: "Data tidak ditemukan dari API Satusehat",
+      //     });
+      //   }
+      //   // Untuk error lain dari API
+      //   return res.status(statusCode).json({
+      //     status: false,
+      //     message: errorMessage,
+      //     detail: "Error dari Satusehat",
+      //   });
+      // }
+      // // Untuk error umum (misalnya timeout, DNS error, dll)
+      // return res.status(500).json({
+      //   status: false,
+      //   message: "Gagal mengambil data dari Satusehat",
+      //   detail: error.message,
+      // });
     }
   } else {
     return res.status(404).send({
@@ -207,6 +267,241 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
     });
   }
 };
+
+// fungsi delay pakai Promise agar bisa di-await
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
+  const joi = Joi.extend(joiDate);
+  const schema = joi.object({
+    rsId: joi.string().required(),
+    periode: joi.date().format("YYYY-MM").required(),
+    page: joi.number(),
+    limit: joi.number(),
+  });
+  const { error, value } = schema.validate(req.query);
+  if (error) {
+    return res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+  }
+
+  let koders;
+  let periodeget;
+
+  if (req.user.jenisUserId == 4) {
+    if (req.query.rsId != req.user.satKerId) {
+      return res.status(404).send({
+        status: false,
+        message: "Kode RS Tidak Sesuai",
+      });
+    }
+
+    // USER RS
+    koders = req.user.satKerId;
+    periodeget = req.query.periode;
+  } else {
+    // return res.status(404).send({
+    //   status: false,
+    //   message: "Untuk Dinkes belum bisa menarik data",
+    // });
+
+    koders = req.query.rsId;
+    periodeget = req.query.periode;
+  }
+
+  try {
+    const satuSehat = await satu_sehat_id.findOne({
+      where: { kode_baru_faskes: koders },
+      attributes: ["organization_id"],
+    });
+
+    if (!satuSehat) {
+      return res.status(404).send({
+        status: false,
+        message: "OrganizationId Tidak Ada",
+      });
+    }
+
+    const organization_id = satuSehat.organization_id;
+
+    const result = await rlLimaTitikSatuSatuSehat.findAll({
+      where: {
+        organization_id: organization_id, // bisa string atau number, sesuaikan tipe data db
+        periode: periodeget,
+      },
+      attributes: [
+        "icd_10",
+        "diagnosis",
+        "periode",
+        "male_new_cases",
+        "females_new_cases",
+        "total_new_cases",
+        "male_visits",
+        "female_visits",
+        "total_visits",
+        "age_id",
+      ],
+      include: [
+        {
+          model: AgeGroups,
+          attributes: ["name"], // alias 'age' nanti bisa rename di client
+          required: false,
+        },
+        {
+          model: satu_sehat_id,
+          attributes: ["organization_id", "kode_baru_faskes"],
+          required: false,
+          include: [
+            {
+              model: users_sso,
+              attributes: ["nama", "rs_id"],
+              required: false,
+            },
+          ],
+        },
+      ],
+      order: [
+        ["icd_10", "ASC"],
+        ["age_id", "ASC"],
+      ],
+    });
+
+    const nestedData = groupByRSandAge(result);
+    res.status(200).send({
+      status: true,
+      message: "data found",
+      data: nestedData,
+    });
+    // .then((results) => {
+    //   res.status(200).send({
+    //     status: true,
+    //     message: "data found",
+    //     data: results,
+    //   });
+    // })
+    // .catch((err) => {
+    //   res.status(422).send({
+    //     status: false,
+    //     message: err,
+    //   });
+    //   return;
+    // });
+  } catch (err) {
+    res.status(422).send({
+      status: false,
+      message: err,
+    });
+    return;
+  }
+};
+
+function groupByRSandAge(data) {
+  const rsMap = new Map();
+
+  data.forEach((item) => {
+    const orgId = item.satu_sehat_id.organization_id;
+    const rsName = item.satu_sehat_id.users_sso.nama;
+    const rsId = item.satu_sehat_id.users_sso.rs_id;
+    const ageId = item.age_id;
+    const ageName = item.age_groups_satusehat.name;
+
+    if (!rsMap.has(orgId)) {
+      rsMap.set(orgId, {
+        organization_id: orgId,
+        rs_id: rsId,
+        rs_name: rsName,
+        age_groups: new Map(),
+      });
+    }
+
+    const rs = rsMap.get(orgId);
+
+    if (!rs.age_groups.has(ageId)) {
+      rs.age_groups.set(ageId, {
+        age_id: ageId,
+        age_name: ageName,
+        records: [],
+      });
+    }
+
+    const ageGroup = rs.age_groups.get(ageId);
+
+    ageGroup.records.push({
+      icd_10: item.icd_10,
+      diagnosis: item.diagnosis,
+      periode: item.periode,
+      male_new_cases: item.male_new_cases,
+      females_new_cases: item.females_new_cases,
+      total_new_cases: item.total_new_cases,
+      male_visits: item.male_visits,
+      female_visits: item.female_visits,
+      total_visits: item.total_visits,
+    });
+  });
+
+  // Convert Map to Array with nested arrays
+  return Array.from(rsMap.values()).map((rs) => ({
+    organization_id: rs.organization_id,
+    rs_id: rs.rs_id,
+    rs_name: rs.rs_name,
+    age_groups: Array.from(rs.age_groups.values()),
+  }));
+}
+
+async function saveRecords(records, organization_id, periode) {
+  for (const record of records) {
+    for (const newCase of record.new_cases) {
+      // 1. Pastikan age group tersedia
+      const age = await AgeGroups.findByPk(newCase.age_id);
+      if (!age) {
+        await AgeGroups.create({
+          id: newCase.age_id,
+          name: newCase.age_name,
+        });
+      }
+
+      // 2. Cek apakah data dengan kombinasi unik sudah ada
+      const existing = await rlLimaTitikSatuSatuSehat.findOne({
+        where: {
+          organization_id,
+          periode,
+          icd_10: record.icd10,
+          age_id: newCase.age_id,
+        },
+      });
+
+      const total_new = newCase.male_new_cases + newCase.female_new_cases;
+
+      const dataToSave = {
+        diagnosis: record.diagnosis,
+        male_new_cases: newCase.male_new_cases,
+        females_new_cases: newCase.female_new_cases,
+        total_new_cases: total_new,
+        male_visits: record.male_visits,
+        female_visits: record.female_visits,
+        total_visits: record.total_visits,
+      };
+
+      if (existing) {
+        // 3. Jika sudah ada, update
+        await existing.update(dataToSave);
+      } else {
+        // 4. Jika belum ada, create
+        await rlLimaTitikSatuSatuSehat.create({
+          ...dataToSave,
+          organization_id,
+          periode,
+          icd_10: record.icd10,
+          age_id: newCase.age_id,
+        });
+      }
+    }
+  }
+}
 
 export const insertdataRLLimaTitikSatu = async (req, res) => {
   const schema = Joi.object({
