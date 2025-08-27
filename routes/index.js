@@ -43,6 +43,7 @@ import {
   insertDataRLTigaTitikEmpat,
   updateDataRLTigaTitikEmpat,
   deleteDataRLTigaTitikEmpat,
+  getDataRLTigaTitikEmpatSatuSehat,
 } from "../controllers/RLTigaTitikEmpatController.js";
 
 // RL 3.5
@@ -301,7 +302,6 @@ import {
   insertdataRLLimaTitikSatu,
   updateDataRLLimaTitikSatu,
   getDataRLLimaTitikSatuSatuSehat,
-  getDataRLLimaTitikSatuSatuSehatShow,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -435,6 +435,13 @@ router.post(
   verifyToken,
   insertDataRLTigaTitikEmpat
 );
+
+router.get("/apisirs6v2/rltigatitikempatsatusehat",
+  verifyToken,
+  getDataRLTigaTitikEmpatSatuSehat
+);
+
+
 router.get(
   "/apisirs6v2/rltigatitikempat",
   verifyToken,
@@ -1118,12 +1125,6 @@ router.get(
   "/apisirs6v2/rllimatitiksatusatusehat",
   verifyToken,
   getDataRLLimaTitikSatuSatuSehat
-);
-
-router.get(
-  "/apisirs6v2/rllimatitiksatusatusehatshow",
-  verifyToken,
-  getDataRLLimaTitikSatuSatuSehatShow
 );
 
 // RL 5.3
