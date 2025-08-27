@@ -21,7 +21,6 @@ export const verifyToken = (req, res, next) => {
     })
 }
 
-
 export const verifyTokenBridge = (req, res, next) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
