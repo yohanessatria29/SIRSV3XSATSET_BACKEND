@@ -63,6 +63,8 @@ export const getDataRLLimaTitikSatu = (req, res) => {
       where: whereClause,
     })
     .then((results) => {
+      const jsonString = JSON.stringify(results);
+
       res.status(200).send({
         status: true,
         message: "data found",
@@ -235,24 +237,24 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
     } catch (err) {
       console.log(err);
       // Kalau error dari axios (seperti 404)
-      // if (err.response) {
-      //   const statusCode = err.response.status;
-      //   const errorMessage =
-      //     err.response.data?.message || "Error from external API";
-      //   if (statusCode === 404) {
-      //     return res.status(404).json({
-      //       status: false,
-      //       message: errorMessage,
-      //       detail: "Data tidak ditemukan dari API Satusehat",
-      //     });
-      //   }
-      //   // Untuk error lain dari API
-      //   return res.status(statusCode).json({
-      //     status: false,
-      //     message: errorMessage,
-      //     detail: "Error dari Satusehat",
-      //   });
-      // }
+      if (err.response) {
+        const statusCode = err.response.status;
+        const errorMessage =
+          err.response.data?.message || "Error from external API";
+        if (statusCode === 404) {
+          return res.status(404).json({
+            status: false,
+            message: errorMessage,
+            detail: "Data tidak ditemukan dari API Satusehat",
+          });
+        }
+        // Untuk error lain dari API
+        return res.status(statusCode).json({
+          status: false,
+          message: errorMessage,
+          detail: "Error dari Satusehat",
+        });
+      }
       // // Untuk error umum (misalnya timeout, DNS error, dll)
       // return res.status(500).json({
       //   status: false,
