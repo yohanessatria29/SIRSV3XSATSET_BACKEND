@@ -61,6 +61,18 @@ apiRegistration.hasMany(emailVerificationToken, {
 });
 
 
+apiRegistration.hasOne(apiKeyDevelopment, {
+  foreignKey: "registration_id",
+});
+
+apiKeyDevelopment.belongsTo(apiRegistration, {
+  foreignKey: "registration_id",
+});
+
+emailVerificationToken.belongsTo(apiRegistration, {
+  foreignKey: "registration_id",
+});
+
 
 export const insert= async(data, callback) => {
 
@@ -178,7 +190,8 @@ export const get = async(data, callback) => {
     " LEFT JOIN api_key_development ON api_registration.id = api_key_development.registration_id "+ 
     " LEFT JOIN api_production_request ON api_key_development.id = api_production_request.api_key_development_id "+ 
     " LEFT JOIN api_key_production ON api_production_request.id = api_key_production.id "+ 
-    " INNER JOIN users ON users.satker_id = api_registration.rs_id "
+    " INNER JOIN users ON users.satker_id = api_registration.rs_id "+
+    " GROUP BY api_registration.email_pendaftaran "	
 
     const sqlOrder = " ORDER BY api_registration.created_at DESC, api_production_request.created_at desc "
 

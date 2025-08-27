@@ -337,7 +337,7 @@ router.post("/apisirs6v2/validasi", verifyToken, insertValidasi);
 
 // Token
 // router.post("/apisirs6v2/login", login);
-router.delete("/apisirs6v2/logout", verifyCsrfToken, logout);
+router.delete("/apisirs6v2/logout", logout);
 router.get("/apisirs6v2/token", refreshToken);
 
 router.get("/apisirs6v2/login", loginSSO);
