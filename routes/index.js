@@ -305,6 +305,7 @@ import {
   insertdataRLLimaTitikSatu,
   updateDataRLLimaTitikSatu,
   getDataRLLimaTitikSatuSatuSehat,
+  getDataRLLimaTitikSatuSatuSehatShow,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -1140,6 +1141,12 @@ router.get(
   "/apisirs6v2/rllimatitiksatusatusehat",
   verifyToken,
   getDataRLLimaTitikSatuSatuSehat
+);
+
+router.get(
+  "/apisirs6v2/rllimatitiksatusatusehatshow",
+  verifyToken,
+  getDataRLLimaTitikSatuSatuSehatShow
 );
 
 // RL 5.3
