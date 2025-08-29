@@ -168,15 +168,20 @@ export const get = async(data, callback) => {
     " email_verification_token.id as email_verification_token_id, "+ 
     " api_key_development.id as api_key_development_id, "+ 
     " api_key_development.api_key as api_key_dev, api_key_development.api_secret as api_secret_dev, "+ 
-    " api_production_request.id as api_production_request_id, "+ 
-    " api_production_request.link_bukti_development, api_production_request.`status`, "+ 
-    " api_production_request.alasan_penolakan as catatan_req_prod, api_production_request.created_at as waktu_daftar_prod, "+ 
+
+    " der.id as api_production_request_id, "+ 
+    " der.link_bukti_development, der.`status`, "+ 
+    " der.alasan_penolakan as catatan_req_prod, der.created_at as waktu_daftar_prod, "+ 
+
+
     " api_key_production.id as api_key_production_id, api_key_production.api_key, api_key_production.api_secret "
 
     const sqlFrom = " FROM api_registration "+ 
     " LEFT JOIN email_verification_token ON api_registration.id = email_verification_token.registration_id "+ 
     " LEFT JOIN api_key_development ON api_registration.id = api_key_development.registration_id "+ 
-    " LEFT JOIN api_production_request ON api_key_development.id = api_production_request.api_key_development_id "+ 
+
+    " LEFT JOIN (SELECT * FROM api_production_request ORDER BY created_at DESC) AS der ON api_key_development.id = der.api_key_development_id "+ 
+
     " LEFT JOIN api_key_production ON api_production_request.id = api_key_production.id "+ 
     " INNER JOIN users ON users.satker_id = api_registration.rs_id "+
     " GROUP BY api_registration.email_pendaftaran "
