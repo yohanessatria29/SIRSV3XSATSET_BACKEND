@@ -162,3 +162,8 @@ users_sso.hasOne(satu_sehat_id, {
   sourceKey: "rs_id", // key di users_sso yang kita join-kan
   as: "satuSehat", // alias association
 });
+
+satu_sehat_id.belongsTo(users_sso, {
+  foreignKey: "kode_baru_faskes",
+  targetKey: "rs_id",
+});

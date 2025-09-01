@@ -61,6 +61,18 @@ apiRegistration.hasMany(emailVerificationToken, {
 });
 
 
+apiRegistration.hasOne(apiKeyDevelopment, {
+  foreignKey: "registration_id",
+});
+
+apiKeyDevelopment.belongsTo(apiRegistration, {
+  foreignKey: "registration_id",
+});
+
+emailVerificationToken.belongsTo(apiRegistration, {
+  foreignKey: "registration_id",
+});
+
 
 export const insert= async(data, callback) => {
 
