@@ -182,7 +182,7 @@ export const get = async(data, callback) => {
 
     " LEFT JOIN (SELECT * FROM api_production_request ORDER BY created_at DESC) AS der ON api_key_development.id = der.api_key_development_id "+ 
 
-    " LEFT JOIN api_key_production ON api_production_request.id = api_key_production.id "+ 
+    " LEFT JOIN api_key_production ON der.id = api_key_production.id "+ 
     " INNER JOIN users ON users.satker_id = api_registration.rs_id "+
     " GROUP BY api_registration.email_pendaftaran "
 
