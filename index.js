@@ -8,6 +8,25 @@ import cors from "cors";
 
 const app = express();
 
+// 
+app.use(express.json({ limit: '1mb' }));  
+
+// cek ukuran payload
+app.use((req, res, next) => {
+  const bodySize = JSON.stringify(req.body).length; // Menghitung ukuran payload (dalam byte)
+  const bodySizeInMB = bodySize / (1024 * 1024); // Menghitung ukuran dalam MB
+  const maxSize = 1 * 1024 * 1024; // Maksimal ukuran payload yang diizinkan (10MB)
+
+  if (bodySize > maxSize) {
+    return res.status(413).send({
+      status: false,
+      message: "Payload terlalu besar, melebihi batas yang diperbolehkan (10MB)."
+    });
+  }
+
+  next(); 
+});
+
 try {
   await databaseSIRS.authenticate();
   console.log("database sirs connected...");

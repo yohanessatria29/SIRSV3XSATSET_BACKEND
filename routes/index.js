@@ -274,10 +274,13 @@ import {
   deleteDataRLEmpatTitikSatu,
   getDataRLEmpatTitikSatu,
   getDataRLEmpatTitikSatuById,
+  getDataRLEmpatTitikSatuExternal,
   // getRLEmpatTitikDua,
   // getRLEmpatTitikTiga,
   insertDataRLEmpatTitikSatu,
+  insertDataRLEmpatTitikSatuExternal,
   updateDataRLEmpatTitikSatu,
+  updateDataRLEmpatTitikSatuExternal,
 } from "../controllers/RLEmpatTitikSatuController.js";
 
 // RL 4.2
@@ -306,6 +309,9 @@ import {
   updateDataRLLimaTitikSatu,
   getDataRLLimaTitikSatuSatuSehat,
   getDataRLLimaTitikSatuSatuSehatShow,
+  insertdataRLLimaTitikSatuExternal,
+  updateDataRLLimaTitikSatuExternal,
+  getDataRLLimaTitikSatuExternal,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -1180,32 +1186,29 @@ router.post("/apisirs6v2/apiproductionrequest/review/:productionRequestId",  ver
 
 router.post("/apisirs6v2/external/login",  loginBridgingDev);
 
-router.post("/apisirs6v2/external/login",  loginBridging);
+// router.post("/apisirs6v2/external/login",  loginBridging);
 
 router.get("/apisirs6v2/external/icd/rawat_jalan/find", verifyTokenBridge, getIcdRajalbySearch);
 router.get("/apisirs6v2/external/icd/rawat_inap/find", verifyTokenBridge, getIcdRanapbySearch);
 
 
 // RL 4.1
-router.get("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, getDataRLEmpatTitikSatu);
-
-// RL 4.2
-router.get("/apisirs6v2/external/rlempattitikdua", verifyTokenBridge, getRLEmpatTitikDua);
-
-// RL 4.3
-router.get("/apisirs6v2/external/rlempattitiktiga", verifyTokenBridge, getRLEmpatTitikTiga);
+router.get("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, getDataRLEmpatTitikSatuExternal);
 
 // RL 5.1
-router.get("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, getDataRLLimaTitikSatu);
+router.get("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, getDataRLLimaTitikSatuExternal);
 
-// RL 5.2
-router.get("/apisirs6v2/external/rllimatitikdua", verifyTokenBridge, getRLLimaTitikDua);
+//4.1 Bridging Insert
+router.post("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, insertDataRLEmpatTitikSatuExternal);
 
-// RL 5.3
-router.get("/apisirs6v2/external/rllimatitiktiga", verifyTokenBridge, getRLLimatitikTiga);
+//5.1 Bridging Insert
+router.post("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, insertdataRLLimaTitikSatuExternal);
 
+//4.1 Bridging Update
+router.patch("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, updateDataRLEmpatTitikSatuExternal);
 
-
+//5.1 Bridging Update
+router.patch("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, updateDataRLLimaTitikSatuExternal);
 
 
 
