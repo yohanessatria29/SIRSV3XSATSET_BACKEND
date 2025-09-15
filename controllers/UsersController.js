@@ -14,7 +14,8 @@ import jsonWebToken from "jsonwebtoken";
 import Joi from "joi";
 import passwordValidator from "password-validator";
 import { Sequelize } from "sequelize";
-
+import { apiKeyDevelopment } from "../models/ApiKeyDevelopmentModel.js";
+import { apiRegistration } from "../models/ApiRegistrationModel.js";
 const Op = Sequelize.Op;
 const SSO_BASE_URL = process.env.SSO_BASE_URL;
 
@@ -999,7 +1000,7 @@ apiKeyDevelopment
         where: {
           rs_id: results.dataValues.rs_id,
           email : results.api_registration.dataValues.email_pendaftaran,
-          kriteria_user_id : 4,
+          kriteria_user_id : 2,
         },
       })
       .then((findUserResults) => {
