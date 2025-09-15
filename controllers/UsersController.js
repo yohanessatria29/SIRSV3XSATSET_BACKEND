@@ -1148,7 +1148,7 @@ apiKeyDevelopment
         where: {
           rs_id: results.dataValues.rs_id,
           email : results.api_registration.dataValues.email_pendaftaran,
-          kriteria_user_id : 2,
+          kriteria_user_id : 4,
         },
       })
       .then((findUserResults) => {
