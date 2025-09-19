@@ -278,13 +278,12 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   const schema = joi.object({
     rsId: joi.string().required(),
     periode: joi.date().format("YYYY-MM").required(),
-    page: joi.number(),   // opsional jika nanti mau pakai pagination
-    limit: joi.number(),  // opsional
+    page: joi.number(),
+    limit: joi.number(),
   });
-
   const { error, value } = schema.validate(req.query);
   if (error) {
-    return res.status(400).send({
+    return res.status(404).send({
       status: false,
       message: error.details[0].message,
     });
@@ -293,25 +292,28 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   let koders;
   let periodeget;
 
-  // Validasi RS ID untuk user RS
   if (req.user.jenisUserId == 4) {
     if (req.query.rsId != req.user.satKerId) {
-      return res.status(403).send({
+      return res.status(404).send({
         status: false,
         message: "Kode RS Tidak Sesuai",
       });
     }
 
+    // USER RS
     koders = req.user.satKerId;
     periodeget = req.query.periode;
   } else {
-    // User Dinkes atau lainnya
+    // return res.status(404).send({
+    //   status: false,
+    //   message: "Untuk Dinkes belum bisa menarik data",
+    // });
+
     koders = req.query.rsId;
     periodeget = req.query.periode;
   }
 
   try {
-    // Ambil organization_id dari mapping RS
     const satuSehat = await satu_sehat_id.findOne({
       where: { kode_baru_faskes: koders },
       attributes: ["organization_id"],
@@ -326,10 +328,9 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
 
     const organization_id = satuSehat.organization_id;
 
-    // Ambil data RL 5.1.1 yang sesuai, sudah diurutkan
     const result = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
-        organization_id: organization_id,
+        organization_id: organization_id, // bisa string atau number, sesuaikan tipe data db
         periode: periodeget,
       },
       attributes: [
@@ -347,7 +348,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       include: [
         {
           model: AgeGroups,
-          attributes: ["name"], // Umur
+          attributes: ["name"], // alias 'age' nanti bisa rename di client
           required: false,
         },
         {
@@ -369,22 +370,40 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       ],
     });
 
-    // Kirim data flat langsung
+    result.sort((a, b) => {
+    if (a.icd_10 === b.icd_10) {
+      return a.age_id - b.age_id;
+    }
+      return a.icd_10.localeCompare(b.icd_10, undefined, { numeric: true });
+    });
+    const nestedData = groupByRSandAge(result);
     res.status(200).send({
       status: true,
-      message: "Data ditemukan",
-      data: result,
+      message: "data found",
+      data: nestedData,
     });
+    // .then((results) => {
+    //   res.status(200).send({
+    //     status: true,
+    //     message: "data found",
+    //     data: results,
+    //   });
+    // })
+    // .catch((err) => {
+    //   res.status(422).send({
+    //     status: false,
+    //     message: err,
+    //   });
+    //   return;
+    // });
   } catch (err) {
-    console.error("Gagal ambil data RL 5.1.1:", err);
-    res.status(500).send({
+    res.status(422).send({
       status: false,
-      message: "Gagal mengambil data",
-      error: err.message,
+      message: err,
     });
+    return;
   }
 };
-
 
 function groupByRSandAge(data) {
   const rsMap = new Map();
