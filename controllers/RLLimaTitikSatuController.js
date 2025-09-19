@@ -549,6 +549,41 @@ async function saveRecords(records, organization_id, periode) {
 //   }
 // }
 
+function groupByICDandAge(results) {
+  const grouped = {};
+
+  for (const item of results) {
+    const icd = item.icd_10;
+
+    if (!grouped[icd]) {
+      grouped[icd] = {
+        icd_10: icd,
+        diagnosis: item.diagnosis,
+        periode: item.periode,
+        records: [],
+      };
+    }
+
+    grouped[icd].records.push({
+      age_id: item.age_id,
+      age_name: item.AgeGroup?.name || "-",
+      male_new_cases: item.male_new_cases,
+      female_new_cases: item.females_new_cases,
+      total_new_cases: item.total_new_cases,
+      male_visits: item.male_visits,
+      female_visits: item.female_visits,
+      total_visits: item.total_visits,
+    });
+  }
+
+  // Ubah object ke array, dan urutkan age_id
+  return Object.values(grouped).map((group) => {
+    group.records.sort((a, b) => a.age_id - b.age_id);
+    return group;
+  });
+}
+
+
 export const insertdataRLLimaTitikSatu = async (req, res) => {
   const schema = Joi.object({
     periodeBulan: Joi.number().greater(0).less(13).required(),
