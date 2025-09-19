@@ -453,30 +453,32 @@ function groupByRSandAge(data) {
 }
 
 async function saveRecords(records, organization_id, periode) {
+  // 1. Load all existing AgeGroups once
+  const existingAges = await AgeGroups.findAll();
+  const ageMap = new Map(existingAges.map((age) => [age.id, age.name]));
+
+  // 2. Prepare new AgeGroups (if needed)
+  const newAgeGroups = [];
+  const dataToUpsert = [];
+
   for (const record of records) {
     for (const newCase of record.new_cases) {
-      // 1. Pastikan age group tersedia
-      const age = await AgeGroups.findByPk(newCase.age_id);
-      if (!age) {
-        await AgeGroups.create({
-          id: newCase.age_id,
-          name: newCase.age_name,
-        });
-      }
+      const age_id = newCase.age_id;
+      const age_name = newCase.age_name;
 
-      // 2. Cek apakah data dengan kombinasi unik sudah ada
-      const existing = await rlLimaTitikSatuSatuSehat.findOne({
-        where: {
-          organization_id,
-          periode,
-          icd_10: record.icd10,
-          age_id: newCase.age_id,
-        },
-      });
+      // Add missing age groups
+      if (!ageMap.has(age_id)) {
+        newAgeGroups.push({ id: age_id, name: age_name });
+        ageMap.set(age_id, age_name);
+      }
 
       const total_new = newCase.male_new_cases + newCase.female_new_cases;
 
-      const dataToSave = {
+      dataToUpsert.push({
+        organization_id,
+        periode,
+        icd_10: record.icd10,
+        age_id: age_id,
         diagnosis: record.diagnosis,
         male_new_cases: newCase.male_new_cases,
         females_new_cases: newCase.female_new_cases,
@@ -484,24 +486,85 @@ async function saveRecords(records, organization_id, periode) {
         male_visits: record.male_visits,
         female_visits: record.female_visits,
         total_visits: record.total_visits,
-      };
-
-      if (existing) {
-        // 3. Jika sudah ada, update
-        await existing.update(dataToSave);
-      } else {
-        // 4. Jika belum ada, create
-        await rlLimaTitikSatuSatuSehat.create({
-          ...dataToSave,
-          organization_id,
-          periode,
-          icd_10: record.icd10,
-          age_id: newCase.age_id,
-        });
-      }
+      });
     }
   }
+
+  // 3. Bulk insert missing age groups
+  if (newAgeGroups.length > 0) {
+    await AgeGroups.bulkCreate(newAgeGroups, {
+      ignoreDuplicates: true,
+    });
+  }
+
+  // 4. Bulk upsert records
+  if (dataToUpsert.length > 0) {
+    await rlLimaTitikSatuSatuSehat.bulkCreate(dataToUpsert, {
+      updateOnDuplicate: [
+        "diagnosis",
+        "male_new_cases",
+        "females_new_cases",
+        "total_new_cases",
+        "male_visits",
+        "female_visits",
+        "total_visits",
+      ],
+    });
+  }
+
+  // console.log(`✅ ${dataToUpsert.length} records saved/updated`);
 }
+
+// async function saveRecords(records, organization_id, periode) {
+//   for (const record of records) {
+//     for (const newCase of record.new_cases) {
+//       // 1. Pastikan age group tersedia
+//       const age = await AgeGroups.findByPk(newCase.age_id);
+//       if (!age) {
+//         await AgeGroups.create({
+//           id: newCase.age_id,
+//           name: newCase.age_name,
+//         });
+//       }
+
+//       // 2. Cek apakah data dengan kombinasi unik sudah ada
+//       const existing = await rlLimaTitikSatuSatuSehat.findOne({
+//         where: {
+//           organization_id,
+//           periode,
+//           icd_10: record.icd10,
+//           age_id: newCase.age_id,
+//         },
+//       });
+
+//       const total_new = newCase.male_new_cases + newCase.female_new_cases;
+
+//       const dataToSave = {
+//         diagnosis: record.diagnosis,
+//         male_new_cases: newCase.male_new_cases,
+//         females_new_cases: newCase.female_new_cases,
+//         total_new_cases: total_new,
+//         male_visits: record.male_visits,
+//         female_visits: record.female_visits,
+//         total_visits: record.total_visits,
+//       };
+
+//       if (existing) {
+//         // 3. Jika sudah ada, update
+//         await existing.update(dataToSave);
+//       } else {
+//         // 4. Jika belum ada, create
+//         await rlLimaTitikSatuSatuSehat.create({
+//           ...dataToSave,
+//           organization_id,
+//           periode,
+//           icd_10: record.icd10,
+//           age_id: newCase.age_id,
+//         });
+//       }
+//     }
+//   }
+// }
 
 export const insertdataRLLimaTitikSatu = async (req, res) => {
   const schema = Joi.object({
