@@ -278,13 +278,13 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   const schema = joi.object({
     rsId: joi.string().required(),
     periode: joi.date().format("YYYY-MM").required(),
-    page: joi.number(),
-    limit: joi.number(),
+    page: joi.number(),   // opsional jika nanti mau pakai pagination
+    limit: joi.number(),  // opsional
   });
 
   const { error, value } = schema.validate(req.query);
   if (error) {
-    return res.status(404).send({
+    return res.status(400).send({
       status: false,
       message: error.details[0].message,
     });
@@ -293,10 +293,10 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   let koders;
   let periodeget;
 
+  // Validasi RS ID untuk user RS
   if (req.user.jenisUserId == 4) {
-    // User RS: hanya boleh akses RS sendiri
     if (req.query.rsId != req.user.satKerId) {
-      return res.status(404).send({
+      return res.status(403).send({
         status: false,
         message: "Kode RS Tidak Sesuai",
       });
@@ -305,12 +305,13 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     koders = req.user.satKerId;
     periodeget = req.query.periode;
   } else {
-    // User Dinkes: bebas pilih RS
+    // User Dinkes atau lainnya
     koders = req.query.rsId;
     periodeget = req.query.periode;
   }
 
   try {
+    // Ambil organization_id dari mapping RS
     const satuSehat = await satu_sehat_id.findOne({
       where: { kode_baru_faskes: koders },
       attributes: ["organization_id"],
@@ -325,6 +326,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
 
     const organization_id = satuSehat.organization_id;
 
+    // Ambil data RL 5.1.1 yang sesuai, sudah diurutkan
     const result = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id: organization_id,
@@ -345,7 +347,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       include: [
         {
           model: AgeGroups,
-          attributes: ["name"], // umur
+          attributes: ["name"], // Umur
           required: false,
         },
         {
@@ -367,21 +369,23 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       ],
     });
 
-    const nestedData = groupByICDandAge(result);
-
+    // Kirim data flat langsung
     res.status(200).send({
       status: true,
       message: "Data ditemukan",
-      data: nestedData,
+      data: result,
     });
   } catch (err) {
-    res.status(422).send({
+    console.error("Gagal ambil data RL 5.1.1:", err);
+    res.status(500).send({
       status: false,
       message: "Gagal mengambil data",
       error: err.message,
     });
   }
 };
+
+
 function groupByRSandAge(data) {
   const rsMap = new Map();
 
