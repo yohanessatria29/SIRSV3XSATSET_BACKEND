@@ -376,11 +376,11 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     }
       return a.icd_10.localeCompare(b.icd_10, undefined, { numeric: true });
     });
-    const nestedData = groupByRSandAge(result);
+    // const nestedData = groupByRSandAge(result);
     res.status(200).send({
       status: true,
       message: "data found",
-      data: nestedData,
+      data: result,
     });
     // .then((results) => {
     //   res.status(200).send({
