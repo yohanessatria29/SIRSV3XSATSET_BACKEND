@@ -281,6 +281,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     page: joi.number(),
     limit: joi.number(),
   });
+
   const { error, value } = schema.validate(req.query);
   if (error) {
     return res.status(404).send({
@@ -293,6 +294,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   let periodeget;
 
   if (req.user.jenisUserId == 4) {
+    // User RS: hanya boleh akses RS sendiri
     if (req.query.rsId != req.user.satKerId) {
       return res.status(404).send({
         status: false,
@@ -300,15 +302,10 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       });
     }
 
-    // USER RS
     koders = req.user.satKerId;
     periodeget = req.query.periode;
   } else {
-    // return res.status(404).send({
-    //   status: false,
-    //   message: "Untuk Dinkes belum bisa menarik data",
-    // });
-
+    // User Dinkes: bebas pilih RS
     koders = req.query.rsId;
     periodeget = req.query.periode;
   }
@@ -330,7 +327,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
 
     const result = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
-        organization_id: organization_id, // bisa string atau number, sesuaikan tipe data db
+        organization_id: organization_id,
         periode: periodeget,
       },
       attributes: [
@@ -348,7 +345,7 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       include: [
         {
           model: AgeGroups,
-          attributes: ["name"], // alias 'age' nanti bisa rename di client
+          attributes: ["name"], // umur
           required: false,
         },
         {
@@ -370,35 +367,21 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       ],
     });
 
-    const nestedData = groupByRSandAge(result);
+    const nestedData = groupByICDandAge(result);
+
     res.status(200).send({
       status: true,
-      message: "data found",
+      message: "Data ditemukan",
       data: nestedData,
     });
-    // .then((results) => {
-    //   res.status(200).send({
-    //     status: true,
-    //     message: "data found",
-    //     data: results,
-    //   });
-    // })
-    // .catch((err) => {
-    //   res.status(422).send({
-    //     status: false,
-    //     message: err,
-    //   });
-    //   return;
-    // });
   } catch (err) {
     res.status(422).send({
       status: false,
-      message: err,
+      message: "Gagal mengambil data",
+      error: err.message,
     });
-    return;
   }
 };
-
 function groupByRSandAge(data) {
   const rsMap = new Map();
 
