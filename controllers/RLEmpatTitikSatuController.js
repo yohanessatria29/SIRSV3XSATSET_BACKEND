@@ -854,7 +854,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
     data: Joi.array()
       .items(
         Joi.object().keys({
-          icdId: Joi.number().required(),
+          icd10: Joi.string().required(),
           jmlhPasHidupMatiUmurGen01JamL: Joi.number().min(0).max(99999999).required(),
           jmlhPasHidupMatiUmurGen01JamP: Joi.number().min(0).max(99999999).required(),
           jmlhPasHidupMatiUmurGen123JamL: Joi.number().min(0).max(99999999).required(),
@@ -939,7 +939,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
 
 
   if (
-    req.body.periodeTahun > currentYear || 
+    req.body.periodeTahun > currentYear ||
     (req.body.periodeTahun === currentYear && req.body.periodeBulan >= currentMonth)
   ) {
     return res.status(400).send({
@@ -952,11 +952,11 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
 
   try {
 
-     const idToIndexes = new Map(); 
+    const idToIndexes = new Map();
     value.data.forEach((it, idx) => {
-      const key = String(Number(it.icdId));
+      const key = String(it.icd10);
       const arr = idToIndexes.get(key) || [];
-      arr.push(idx + 1); 
+      arr.push(idx + 1);
       idToIndexes.set(key, arr);
     });
 
@@ -969,37 +969,40 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
     if (dupMsgs.length > 0) {
       return res.status(400).send({
         status: false,
-        message: "Validasi ICD gagal (duplikat icdId).",
+        message: "Validasi ICD gagal (duplikat icd10).",
         errors: dupMsgs,
       });
     }
 
-    const ids = Array.from(idToIndexes.keys()).map((k) => Number(k));
+    const ids = Array.from(idToIndexes.keys()).map((k) => k);
 
     const masterRows = await icd.findAll({
       where: {
         [Op.and]: [
-          { id: { [Op.in]: ids } },
-          { status_rawat_inap: 1 }, 
+          { icd_code: { [Op.in]: ids } },
+          { status_rawat_inap: 1 },
         ],
       },
       attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
       raw: true,
     });
 
-    const masterMap = new Map(masterRows.map(r => [Number(r.id), r]));
+    const masterMap = new Map(masterRows.map(r => [r.icd_code, r]));
     const errors = [];
+
+    // console.log("massteee ", masterMap)
+
 
     value.data.forEach((item, idx) => {
       const no = idx + 1;
-      const idNum = Number(item.icdId);
-      const master = masterMap.get(Number(item.icdId));
+      const idNum = item.icd10;
+      const master = masterMap.get(item.icd10);
 
       if (!master) {
-        errors.push(`Data ke-${no} (ICD id ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`);
+        errors.push(`Data ke-${no} (ICD ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`);
         return;
       }
-
+      item.icdId = master.id;
       const { status_laki, status_perempuan } = master;
       const keys = Object.keys(item);
 
@@ -1015,7 +1018,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         const filledL = lKeys.filter(k => val(item[k]) > 0);
         if (filledL.length > 0) {
           errors.push(
-            `Data ke-${no} dengan ICD ID = ${item.icdId} parameter Untuk Jenis Kelamin L (Laki)  tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
+            `Data ke-${no} dengan ICD ID = ${item.icd10} parameter Untuk Jenis Kelamin L (Laki)  tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
           );
         }
       }
@@ -1024,7 +1027,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         const filledP = pKeys.filter(k => val(item[k]) > 0);
         if (filledP.length > 0) {
           errors.push(
-            `Data ke-${no} (ICD ${item.icdId}) parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
+            `Data ke-${no} (ICD ${item.icd10}) parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
           );
         }
       }
@@ -1113,12 +1116,12 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
       if (val(item.jmlhPasKeluarMatiGenP) > totalP) {
         relErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
       }
-      
-  
+
+
       if (relErrors.length > 0) {
         return res.status(400).send({
           status: false,
-          message:relErrors,
+          message: relErrors,
           // errors: relErrors,
         });
       }
@@ -1225,6 +1228,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         d.rl_empat_titik_satu_id = resultInsertHeader.id;
       });
 
+      console.log("itemm ", dataDetail)
 
       await rlEmpatTitikSatuDetail.bulkCreate(dataDetail, {
         transaction,
@@ -1304,10 +1308,10 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
           message: "Gagal Input Data, Parameter Tidak Tepat.",
         });
       }
-      // console.log("bang",err)
+      console.log("bang", err)
       return res.status(400).send({
         status: false,
-        message: "Gagal Input Data 1.",
+        message: "Gagal Input Data.",
       });
     }
 
@@ -1433,15 +1437,23 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
     const ids = Array.from(idPos.keys());
     const existing = await rlEmpatTitikSatuDetail.findAll({
       where: { id: ids, rs_id: req.user.satKerId },
-      attributes: ["id", "rs_id"],
+      attributes: ["id", "rs_id", "icd_id"],
       raw: true,
     });
 
-    const existingMap = new Map(existing.map((r) => [r.id, r.rs_id]));
+    const existingMap = new Map(existing.map((r) => [r.id, r, r.rs_id]));
+    value.data.forEach((item, idx) => {
+      const id = Number(item.id);
+      const existingItem = existingMap.get(id);
+      if (existingItem) {
+          item.icd_id = existingItem.icd_id;
+      }
+  });
+
     const notFoundOrNotOwned = [];
     ids.forEach((id) => {
       if (!existingMap.has(id)) {
-        notFoundOrNotOwned.push(`Data ke-${id} tidak ditemukan atau tidak milik rs_id yang sesuai.`);
+        notFoundOrNotOwned.push(`Data dengan ${id} tidak ditemukan atau kepemilikan data tidak sesuai.`);
       }
     });
     if (notFoundOrNotOwned.length > 0) {
@@ -1452,11 +1464,52 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
       });
     }
 
-    const toUpdate = [];
-    const relErrors = [];
+    let icds = existing.map(item => item.icd_id);
+    const masterIcd = await icd.findAll({
+      where: {
+        [Op.and]: [
+          { id: { [Op.in]: icds } },
+          { status_rawat_inap: 1 },
+        ],
+      },
+      attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
+      raw: true,
+    });
+
+    const masterMap = new Map(masterIcd.map(r => [r.id, r]));
+
+    let toUpdate = [];
+    const errorsIcd = [];
 
     value.data.forEach((item, idx) => {
+
       const no = idx + 1;
+      const cek = masterMap.get(item.icd_id);
+      const keys = Object.keys(item);
+      const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jmlhPasKeluarMatiGenL");
+      const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jmlhPasKeluarMatiGenP");
+
+      const { status_laki, status_perempuan } = cek;
+
+      if (Number(status_laki) === 0) {
+        console.log("laki ",status_laki)
+        const filledL = lKeys.filter(k => val(item[k]) > 0);
+        if (filledL.length > 0) {
+          errorsIcd.push(
+            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
+          );
+        }
+      }
+
+      // Validasi untuk perempuan
+      if (Number(status_perempuan) === 0) {
+        const filledP = pKeys.filter(k => val(item[k]) > 0);
+        if (filledP.length > 0) {
+          errorsIcd.push(
+            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
+          );
+        }
+      }
 
       const totalL = [
         item.jmlhPasHidupMatiUmurGen01JamL,
@@ -1516,8 +1569,8 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
 
       const total = totalL + totalP;
       const totalKeluar = val(item.jmlhPasKeluarMatiGenL) + val(item.jmlhPasKeluarMatiGenP);
+      const relErrors = [];
 
-      // relasi dasar
       if (totalKeluar > total) {
         relErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
       }
@@ -1527,7 +1580,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
       if (val(item.jmlhPasKeluarMatiGenP) > totalP) {
         relErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
       }
-
+   
       toUpdate.push({
         id: Number(item.id),
         jmlh_pas_hidup_mati_umur_gen_0_1jam_l: val(item.jmlhPasHidupMatiUmurGen01JamL),
@@ -1589,7 +1642,16 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
         jmlh_pas_keluar_mati_gen_p: val(item.jmlhPasKeluarMatiGenP),
         total_pas_keluar_mati: totalKeluar,
       });
+
     });
+
+    if (errorsIcd.length) {
+      return res.status(400).send({
+        status: false,
+        message: "Validasi ICD gagal",
+        errors: errorsIcd,
+      });
+    }
 
     if (relErrors.length) {
       return res.status(400).send({
@@ -1609,7 +1671,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
           transaction,
         });
       }
-
+      // await transaction.rollback();
       await transaction.commit();
       return res.status(200).send({
         status: true,
@@ -1625,6 +1687,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
       });
     }
   } catch (err) {
+    // console.log("zulkifli ", err);
     return res.status(400).send({
       status: false,
       message: "Failed to process update.",
