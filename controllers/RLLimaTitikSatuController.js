@@ -65,6 +65,8 @@ export const getDataRLLimaTitikSatu = (req, res) => {
       where: whereClause,
     })
     .then((results) => {
+      const jsonString = JSON.stringify(results);
+
       res.status(200).send({
         status: true,
         message: "data found",
@@ -237,24 +239,24 @@ export const getDataRLLimaTitikSatuSatuSehat = async (req, res) => {
     } catch (err) {
       console.log(err);
       // Kalau error dari axios (seperti 404)
-      // if (err.response) {
-      //   const statusCode = err.response.status;
-      //   const errorMessage =
-      //     err.response.data?.message || "Error from external API";
-      //   if (statusCode === 404) {
-      //     return res.status(404).json({
-      //       status: false,
-      //       message: errorMessage,
-      //       detail: "Data tidak ditemukan dari API Satusehat",
-      //     });
-      //   }
-      //   // Untuk error lain dari API
-      //   return res.status(statusCode).json({
-      //     status: false,
-      //     message: errorMessage,
-      //     detail: "Error dari Satusehat",
-      //   });
-      // }
+      if (err.response) {
+        const statusCode = err.response.status;
+        const errorMessage =
+          err.response.data?.message || "Error from external API";
+        if (statusCode === 404) {
+          return res.status(404).json({
+            status: false,
+            message: errorMessage,
+            detail: "Data tidak ditemukan dari API Satusehat",
+          });
+        }
+        // Untuk error lain dari API
+        return res.status(statusCode).json({
+          status: false,
+          message: errorMessage,
+          detail: "Error dari Satusehat",
+        });
+      }
       // // Untuk error umum (misalnya timeout, DNS error, dll)
       // return res.status(500).json({
       //   status: false,
@@ -372,11 +374,17 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       ],
     });
 
-    const nestedData = groupByRSandAge(result);
+    result.sort((a, b) => {
+      if (a.icd_10 === b.icd_10) {
+        return a.age_id - b.age_id;
+      }
+      return a.icd_10.localeCompare(b.icd_10, undefined, { numeric: true });
+    });
+    // const nestedData = groupByRSandAge(result);
     res.status(200).send({
       status: true,
       message: "data found",
-      data: nestedData,
+      data: result,
     });
     // .then((results) => {
     //   res.status(200).send({
@@ -398,6 +406,155 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
       message: err,
     });
     return;
+  }
+};
+
+export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
+  const joi = Joi.extend(joiDate);
+  const schema = joi.object({
+    rsId: joi.string().required(),
+    periode: joi.date().format("YYYY-MM").required(),
+    page: joi.number().integer().min(1).default(1),
+    limit: joi.number().integer().min(1).max(100).default(100),
+  });
+
+  const { error, value } = schema.validate(req.query);
+  if (error) {
+    return res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+  }
+
+  let koders;
+  let periodeget;
+
+  if (req.user.jenisUserId == 4) {
+    if (req.query.rsId != req.user.satKerId) {
+      return res.status(404).send({
+        status: false,
+        message: "Kode RS Tidak Sesuai",
+      });
+    }
+    koders = req.user.satKerId;
+    periodeget = req.query.periode;
+  } else {
+    koders = req.query.rsId;
+    periodeget = req.query.periode;
+  }
+
+  try {
+    const satuSehat = await satu_sehat_id.findOne({
+      where: { kode_baru_faskes: koders },
+      attributes: ["organization_id"],
+    });
+
+    if (!satuSehat) {
+      return res.status(404).send({
+        status: false,
+        message: "OrganizationId Tidak Ada",
+      });
+    }
+
+    const organization_id = satuSehat.organization_id;
+
+    const page = value.page;
+    const limit = value.limit;
+    const offset = (page - 1) * limit;
+
+    const totalData = await rlLimaTitikSatuSatuSehat.count({
+      where: {
+        organization_id,
+        periode: periodeget,
+      },
+    });
+
+    let result = await rlLimaTitikSatuSatuSehat.findAll({
+      where: {
+        organization_id,
+        periode: periodeget,
+      },
+      attributes: [
+        "icd_10",
+        "diagnosis",
+        "periode",
+        "male_new_cases",
+        "females_new_cases",
+        "total_new_cases",
+        "male_visits",
+        "female_visits",
+        "total_visits",
+        "age_id",
+      ],
+      include: [
+        {
+          model: AgeGroups,
+          attributes: ["name"],
+          required: false,
+        },
+        {
+          model: satu_sehat_id,
+          attributes: ["organization_id", "kode_baru_faskes"],
+          required: false,
+          include: [
+            {
+              model: users_sso,
+              attributes: ["nama", "rs_id"],
+              required: false,
+            },
+          ],
+        },
+      ],
+      order: [
+        ["icd_10", "ASC"],
+        ["age_id", "ASC"],
+      ],
+      limit,
+      offset,
+    });
+
+    if (result.length === 0) {
+      return res.status(200).send({
+        status: true,
+        message: "data found",
+        satu_sehat_id: null,
+        data: [],
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          pages: 0,
+        },
+      });
+    }
+
+    // Ambil satu_sehat_id dan users_sso dari data pertama
+    const satuSehatData = result[0].satu_sehat_id;
+
+    // Hapus properti satu_sehat_id di tiap record agar tidak duplikat
+    result = result.map((item) => {
+      const plain = item.get({ plain: true });
+      delete plain.satu_sehat_id;
+      return plain;
+    });
+
+    res.status(200).send({
+      status: true,
+      message: "data found",
+      satu_sehat_id: satuSehatData,
+      data: result,
+      pagination: {
+        total: totalData,
+        page,
+        limit,
+        pages: Math.ceil(totalData / limit),
+      },
+    });
+  } catch (err) {
+    res.status(422).send({
+      status: false,
+      message: err.message || err,
+    });
   }
 };
 
@@ -455,30 +612,32 @@ function groupByRSandAge(data) {
 }
 
 async function saveRecords(records, organization_id, periode) {
+  // 1. Load all existing AgeGroups once
+  const existingAges = await AgeGroups.findAll();
+  const ageMap = new Map(existingAges.map((age) => [age.id, age.name]));
+
+  // 2. Prepare new AgeGroups (if needed)
+  const newAgeGroups = [];
+  const dataToUpsert = [];
+
   for (const record of records) {
     for (const newCase of record.new_cases) {
-      // 1. Pastikan age group tersedia
-      const age = await AgeGroups.findByPk(newCase.age_id);
-      if (!age) {
-        await AgeGroups.create({
-          id: newCase.age_id,
-          name: newCase.age_name,
-        });
-      }
+      const age_id = newCase.age_id;
+      const age_name = newCase.age_name;
 
-      // 2. Cek apakah data dengan kombinasi unik sudah ada
-      const existing = await rlLimaTitikSatuSatuSehat.findOne({
-        where: {
-          organization_id,
-          periode,
-          icd_10: record.icd10,
-          age_id: newCase.age_id,
-        },
-      });
+      // Add missing age groups
+      if (!ageMap.has(age_id)) {
+        newAgeGroups.push({ id: age_id, name: age_name });
+        ageMap.set(age_id, age_name);
+      }
 
       const total_new = newCase.male_new_cases + newCase.female_new_cases;
 
-      const dataToSave = {
+      dataToUpsert.push({
+        organization_id,
+        periode,
+        icd_10: record.icd10,
+        age_id: age_id,
         diagnosis: record.diagnosis,
         male_new_cases: newCase.male_new_cases,
         females_new_cases: newCase.female_new_cases,
@@ -486,23 +645,118 @@ async function saveRecords(records, organization_id, periode) {
         male_visits: record.male_visits,
         female_visits: record.female_visits,
         total_visits: record.total_visits,
-      };
-
-      if (existing) {
-        // 3. Jika sudah ada, update
-        await existing.update(dataToSave);
-      } else {
-        // 4. Jika belum ada, create
-        await rlLimaTitikSatuSatuSehat.create({
-          ...dataToSave,
-          organization_id,
-          periode,
-          icd_10: record.icd10,
-          age_id: newCase.age_id,
-        });
-      }
+      });
     }
   }
+
+  // 3. Bulk insert missing age groups
+  if (newAgeGroups.length > 0) {
+    await AgeGroups.bulkCreate(newAgeGroups, {
+      ignoreDuplicates: true,
+    });
+  }
+
+  // 4. Bulk upsert records
+  if (dataToUpsert.length > 0) {
+    await rlLimaTitikSatuSatuSehat.bulkCreate(dataToUpsert, {
+      updateOnDuplicate: [
+        "diagnosis",
+        "male_new_cases",
+        "females_new_cases",
+        "total_new_cases",
+        "male_visits",
+        "female_visits",
+        "total_visits",
+      ],
+    });
+  }
+
+  // console.log(`✅ ${dataToUpsert.length} records saved/updated`);
+}
+
+// async function saveRecords(records, organization_id, periode) {
+//   for (const record of records) {
+//     for (const newCase of record.new_cases) {
+//       // 1. Pastikan age group tersedia
+//       const age = await AgeGroups.findByPk(newCase.age_id);
+//       if (!age) {
+//         await AgeGroups.create({
+//           id: newCase.age_id,
+//           name: newCase.age_name,
+//         });
+//       }
+
+//       // 2. Cek apakah data dengan kombinasi unik sudah ada
+//       const existing = await rlLimaTitikSatuSatuSehat.findOne({
+//         where: {
+//           organization_id,
+//           periode,
+//           icd_10: record.icd10,
+//           age_id: newCase.age_id,
+//         },
+//       });
+
+//       const total_new = newCase.male_new_cases + newCase.female_new_cases;
+
+//       const dataToSave = {
+//         diagnosis: record.diagnosis,
+//         male_new_cases: newCase.male_new_cases,
+//         females_new_cases: newCase.female_new_cases,
+//         total_new_cases: total_new,
+//         male_visits: record.male_visits,
+//         female_visits: record.female_visits,
+//         total_visits: record.total_visits,
+//       };
+
+//       if (existing) {
+//         // 3. Jika sudah ada, update
+//         await existing.update(dataToSave);
+//       } else {
+//         // 4. Jika belum ada, create
+//         await rlLimaTitikSatuSatuSehat.create({
+//           ...dataToSave,
+//           organization_id,
+//           periode,
+//           icd_10: record.icd10,
+//           age_id: newCase.age_id,
+//         });
+//       }
+//     }
+//   }
+// }
+
+function groupByICDandAge(results) {
+  const grouped = {};
+
+  for (const item of results) {
+    const icd = item.icd_10;
+
+    if (!grouped[icd]) {
+      grouped[icd] = {
+        icd_10: icd,
+        diagnosis: item.diagnosis,
+        periode: item.periode,
+        records: [],
+      };
+    }
+
+    grouped[icd].records.push({
+      age_id: item.age_id,
+      age_name: item.AgeGroup?.name || "-",
+      male_new_cases: item.male_new_cases,
+      female_new_cases: item.females_new_cases,
+      total_new_cases: item.total_new_cases,
+      male_visits: item.male_visits,
+      female_visits: item.female_visits,
+      total_visits: item.total_visits,
+    });
+  }
+
+  // Ubah object ke array, dan urutkan age_id
+  return Object.values(grouped).map((group) => {
+    group.records.sort((a, b) => a.age_id - b.age_id);
+    return group;
+  });
 }
 
 export const insertdataRLLimaTitikSatu = async (req, res) => {
@@ -1132,7 +1386,6 @@ export const deleteDataRLLimaTitikSatu = async (req, res) => {
 };
 
 export const getDataRLLimaTitikSatuExternal = (req, res) => {
-
   // let whereClause = {}
 
   //   if(req.query.rsId != req.user.satKerId){
@@ -1145,15 +1398,23 @@ export const getDataRLLimaTitikSatuExternal = (req, res) => {
   const whereClause = {
     rs_id: req.user.satKerId,
     periode: req.query.periode,
-  }
+  };
 
   rlLimaTitikSatuDetail
     .findAll({
       include: {
         model: icd,
-        attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group"],
+        attributes: [
+          "id",
+          "icd_code",
+          "description_code",
+          "icd_code_group",
+          "description_code_group",
+        ],
       },
-      attributes: ["id", "periode",
+      attributes: [
+        "id",
+        "periode",
         "jumlah_L_dibawah_1_jam",
         "jumlah_P_dibawah_1_jam",
         "jumlah_L_1_sampai_23_jam",
@@ -1209,7 +1470,8 @@ export const getDataRLLimaTitikSatuExternal = (req, res) => {
         "total_kasus_baru",
         "jumlah_kunjungan_L",
         "jumlah_kunjungan_P",
-        "total_jumlah_kunjungan"],
+        "total_jumlah_kunjungan",
+      ],
       where: whereClause,
     })
     .then((results) => {
@@ -1300,7 +1562,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     return res.status(400).send({
       status: false,
       message: " parameter salah",
-      details: error.details.map(d => d.message),
+      details: error.details.map((d) => d.message),
     });
   }
 
@@ -1319,7 +1581,8 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 
   if (
     req.body.periodeTahun > currentYear ||
-    (req.body.periodeTahun === currentYear && req.body.periodeBulan >= currentMonth)
+    (req.body.periodeTahun === currentYear &&
+      req.body.periodeBulan >= currentMonth)
   ) {
     return res.status(400).send({
       status: false,
@@ -1339,7 +1602,9 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     const dupMsgs = [];
     idToIndexes.forEach((positions, key) => {
       if (positions.length > 1) {
-        dupMsgs.push(`ICD id ${key} duplikat pada data ke-${positions.join(", ")}.`);
+        dupMsgs.push(
+          `ICD id ${key} duplikat pada data ke-${positions.join(", ")}.`
+        );
       }
     });
     if (dupMsgs.length > 0) {
@@ -1354,18 +1619,20 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 
     const masterRows = await icd.findAll({
       where: {
-        [Op.and]: [
-          { icd_code: { [Op.in]: ids } },
-          { status_rawat_jalan: 1 },
-        ],
+        [Op.and]: [{ icd_code: { [Op.in]: ids } }, { status_rawat_jalan: 1 }],
       },
-      attributes: ["id", "icd_code", "description_code", "status_laki", "status_perempuan"],
+      attributes: [
+        "id",
+        "icd_code",
+        "description_code",
+        "status_laki",
+        "status_perempuan",
+      ],
       raw: true,
     });
 
-    const masterMap = new Map(masterRows.map(r => [r.icd_code, r]));
+    const masterMap = new Map(masterRows.map((r) => [r.icd_code, r]));
     const errors = [];
-
 
     value.data.forEach((item, idx) => {
       const no = idx + 1;
@@ -1373,7 +1640,9 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const master = masterMap.get(item.icd10);
 
       if (!master) {
-        errors.push(`Data ke-${no} (ICD ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`);
+        errors.push(
+          `Data ke-${no} (ICD ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`
+        );
         return;
       }
 
@@ -1390,7 +1659,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         .filter(k => k !== "jumlahKunjunganPasienP");
 
       if (Number(status_laki) === 0) {
-        const filledL = lKeys.filter(k => item[k] > 0);
+        const filledL = lKeys.filter((k) => item[k] > 0);
         if (filledL.length > 0) {
           errors.push(
             `Data ke-${no} dengan ICD ID = ${item.icd10} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
@@ -1399,7 +1668,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       }
 
       if (Number(status_perempuan) === 0) {
-        const filledP = pKeys.filter(k => item[k] > 0);
+        const filledP = pKeys.filter((k) => item[k] > 0);
         if (filledP.length > 0) {
           errors.push(
             `Data ke-${no} (ICD ${item.icd10}) parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki-Laki.`
@@ -1416,8 +1685,9 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       });
     }
 
-    const periode = `${req.body.periodeTahun}-${String(req.body.periodeBulan).padStart(2, '0')}-01`;
-
+    const periode = `${req.body.periodeTahun}-${String(
+      req.body.periodeBulan
+    ).padStart(2, "0")}-01`;
 
     const dataDetail = value.data.map((item) => {
       const totalL =
@@ -1480,6 +1750,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       if (total <= totalkunjungan) {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
+      
       if (val(item.jumlahKunjunganPasienL) >= totalL) {
         relErrors.push(`Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
@@ -1557,21 +1828,26 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         total_jumlah_kunjungan: totalkunjungan,
         user_id: req.user.userId,
       };
-    })
+    });
     const totalErrors = [];
     dataDetail.forEach((d, i) => {
       const no = i + 1;
       if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-        totalErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
+        totalErrors.push(
+          `Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`
+        );
       }
       if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-        totalErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
+        totalErrors.push(
+          `Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`
+        );
       }
       if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-        totalErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
+        totalErrors.push(
+          `Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`
+        );
       }
     });
-
 
     if (totalErrors.length > 0) {
       return res.status(400).send({
@@ -1592,29 +1868,69 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         },
         { transaction }
       );
-      dataDetail.forEach(d => {
+      dataDetail.forEach((d) => {
         d.rl_lima_titik_satu_id = resultInsertHeader.id;
       });
-
-
 
       await rlLimaTitikSatuDetail.bulkCreate(dataDetail, {
         transaction,
         updateOnDuplicate: [
-          "jumlah_L_dibawah_1_jam", "jumlah_P_dibawah_1_jam", "jumlah_L_1_sampai_23_jam", "jumlah_P_1_sampai_23_jam",
-          "jumlah_L_1_sampai_7_hari", "jumlah_P_1_sampai_7_hari", "jumlah_L_8_sampai_28_hari", "jumlah_P_8_sampai_28_hari",
-          "jumlah_L_29_hari_sampai_dibawah_3_bulan", "jumlah_P_29_hari_sampai_dibawah_3_bulan", "jumlah_L_3_bulan_sampai_dibawah_6_bulan",
-          "jumlah_P_3_bulan_sampai_dibawah_6_bulan", "jumlah_L_6_bulan_sampai_11_bulan", "jumlah_P_6_bulan_sampai_11_bulan",
-          "jumlah_L_1_sampai_4_tahun", "jumlah_P_1_sampai_4_tahun", "jumlah_L_5_sampai_9_tahun", "jumlah_P_5_sampai_9_tahun",
-          "jumlah_L_10_sampai_14_tahun", "jumlah_P_10_sampai_14_tahun", "jumlah_L_15_sampai_19_tahun", "jumlah_P_15_sampai_19_tahun",
-          "jumlah_L_20_sampai_24_tahun", "jumlah_P_20_sampai_24_tahun", "jumlah_L_25_sampai_29_tahun", "jumlah_P_25_sampai_29_tahun",
-          "jumlah_L_30_sampai_34_tahun", "jumlah_P_30_sampai_34_tahun", "jumlah_L_35_sampai_39_tahun", "jumlah_P_35_sampai_39_tahun",
-          "jumlah_L_40_sampai_44_tahun", "jumlah_P_40_sampai_44_tahun", "jumlah_L_45_sampai_49_tahun", "jumlah_P_45_sampai_49_tahun",
-          "jumlah_L_50_sampai_54_tahun", "jumlah_P_50_sampai_54_tahun", "jumlah_L_55_sampai_59_tahun", "jumlah_P_55_sampai_59_tahun",
-          "jumlah_L_60_sampai_64_tahun", "jumlah_P_60_sampai_64_tahun", "jumlah_L_65_sampai_69_tahun", "jumlah_P_65_sampai_69_tahun",
-          "jumlah_L_70_sampai_74_tahun", "jumlah_P_70_sampai_74_tahun", "jumlah_L_75_sampai_79_tahun", "jumlah_P_75_sampai_79_tahun",
-          "jumlah_L_80_sampai_84_tahun", "jumlah_P_80_sampai_84_tahun", "jumlah_L_diatas_85_tahun", "jumlah_P_diatas_85_tahun",
-          "jumlah_kasus_baru_L", "jumlah_kasus_baru_P", "total_kasus_baru", "jumlah_kunjungan_L", "jumlah_kunjungan_P", "total_jumlah_kunjungan"
+          "jumlah_L_dibawah_1_jam",
+          "jumlah_P_dibawah_1_jam",
+          "jumlah_L_1_sampai_23_jam",
+          "jumlah_P_1_sampai_23_jam",
+          "jumlah_L_1_sampai_7_hari",
+          "jumlah_P_1_sampai_7_hari",
+          "jumlah_L_8_sampai_28_hari",
+          "jumlah_P_8_sampai_28_hari",
+          "jumlah_L_29_hari_sampai_dibawah_3_bulan",
+          "jumlah_P_29_hari_sampai_dibawah_3_bulan",
+          "jumlah_L_3_bulan_sampai_dibawah_6_bulan",
+          "jumlah_P_3_bulan_sampai_dibawah_6_bulan",
+          "jumlah_L_6_bulan_sampai_11_bulan",
+          "jumlah_P_6_bulan_sampai_11_bulan",
+          "jumlah_L_1_sampai_4_tahun",
+          "jumlah_P_1_sampai_4_tahun",
+          "jumlah_L_5_sampai_9_tahun",
+          "jumlah_P_5_sampai_9_tahun",
+          "jumlah_L_10_sampai_14_tahun",
+          "jumlah_P_10_sampai_14_tahun",
+          "jumlah_L_15_sampai_19_tahun",
+          "jumlah_P_15_sampai_19_tahun",
+          "jumlah_L_20_sampai_24_tahun",
+          "jumlah_P_20_sampai_24_tahun",
+          "jumlah_L_25_sampai_29_tahun",
+          "jumlah_P_25_sampai_29_tahun",
+          "jumlah_L_30_sampai_34_tahun",
+          "jumlah_P_30_sampai_34_tahun",
+          "jumlah_L_35_sampai_39_tahun",
+          "jumlah_P_35_sampai_39_tahun",
+          "jumlah_L_40_sampai_44_tahun",
+          "jumlah_P_40_sampai_44_tahun",
+          "jumlah_L_45_sampai_49_tahun",
+          "jumlah_P_45_sampai_49_tahun",
+          "jumlah_L_50_sampai_54_tahun",
+          "jumlah_P_50_sampai_54_tahun",
+          "jumlah_L_55_sampai_59_tahun",
+          "jumlah_P_55_sampai_59_tahun",
+          "jumlah_L_60_sampai_64_tahun",
+          "jumlah_P_60_sampai_64_tahun",
+          "jumlah_L_65_sampai_69_tahun",
+          "jumlah_P_65_sampai_69_tahun",
+          "jumlah_L_70_sampai_74_tahun",
+          "jumlah_P_70_sampai_74_tahun",
+          "jumlah_L_75_sampai_79_tahun",
+          "jumlah_P_75_sampai_79_tahun",
+          "jumlah_L_80_sampai_84_tahun",
+          "jumlah_P_80_sampai_84_tahun",
+          "jumlah_L_diatas_85_tahun",
+          "jumlah_P_diatas_85_tahun",
+          "jumlah_kasus_baru_L",
+          "jumlah_kasus_baru_P",
+          "total_kasus_baru",
+          "jumlah_kunjungan_L",
+          "jumlah_kunjungan_P",
+          "total_jumlah_kunjungan",
         ],
       });
 
@@ -1628,7 +1944,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         },
       });
     } catch (err) {
-      console.log("bang", err)
+      console.log("bang", err);
       if (transaction) await transaction.rollback();
       if (err?.name === "SequelizeForeignKeyConstraintError") {
         return res.status(400).send({
@@ -1748,7 +2064,8 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
     });
     const dupIds = [];
     idPos.forEach((pos, id) => {
-      if (pos.length > 1) dupIds.push(`ID ${id} duplikat pada data ke-${pos.join(", ")}`);
+      if (pos.length > 1)
+        dupIds.push(`ID ${id} duplikat pada data ke-${pos.join(", ")}`);
     });
     if (dupIds.length) {
       return res.status(400).send({
@@ -1777,7 +2094,9 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
     const notFoundOrNotOwned = [];
     ids.forEach((id) => {
       if (!existingMap.has(id)) {
-        notFoundOrNotOwned.push(`Data dengan ${id} tidak ditemukan atau kepemilikan data tidak sesuai.`);
+        notFoundOrNotOwned.push(
+          `Data dengan ${id} tidak ditemukan atau kepemilikan data tidak sesuai.`
+        );
       }
     });
     if (notFoundOrNotOwned.length > 0) {
@@ -1788,19 +2107,27 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       });
     }
 
-    let icds = existing.map(item => item.icd_id);
+    let icds = existing.map((item) => item.icd_id);
     const masterIcd = await icd.findAll({
       where: {
-        [Op.and]: [
-          { id: { [Op.in]: icds } },
-          { status_rawat_jalan: 1 },
-        ],
+        [Op.and]: [{ id: { [Op.in]: icds } }, { status_rawat_jalan: 1 }],
       },
-      attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
+      attributes: [
+        "id",
+        "icd_code",
+        "description_code",
+        "icd_code_group",
+        "description_code_group",
+        "status_top_10",
+        "status_rawat_inap",
+        "status_rawat_jalan",
+        "status_laki",
+        "status_perempuan",
+      ],
       raw: true,
     });
 
-    const masterMap = new Map(masterIcd.map(r => [r.id, r]));
+    const masterMap = new Map(masterIcd.map((r) => [r.id, r]));
 
     let toUpdate = [];
     const errorsIcd = [];
@@ -1810,9 +2137,9 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       const no = idx + 1;
       const cek = masterMap.get(item.icd_id);
       const keys = Object.keys(item);
+
       const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahKunjunganPasienL");
       const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahKunjunganPasienP");
-
       const { status_laki, status_perempuan } = cek || {};
 
       if (!cek) {
@@ -1830,7 +2157,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       }
 
       if (Number(status_perempuan) === 0) {
-        const filledP = pKeys.filter(k => val(item[k]) > 0);
+        const filledP = pKeys.filter((k) => val(item[k]) > 0);
         if (filledP.length > 0) {
           errorsIcd.push(
             `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
@@ -1896,7 +2223,6 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
 
       const total = totalL + totalP;
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
-
       if (total <= totalkunjungan) {
         relErrors.push(`Data ke-${no}: Jumlah Kasus Baru harus lebih dari Jumlah Kunjungan.`);
       }
