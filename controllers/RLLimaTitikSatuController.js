@@ -304,11 +304,6 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     koders = req.user.satKerId;
     periodeget = req.query.periode;
   } else {
-    // return res.status(404).send({
-    //   status: false,
-    //   message: "Untuk Dinkes belum bisa menarik data",
-    // });
-
     koders = req.query.rsId;
     periodeget = req.query.periode;
   }
@@ -371,37 +366,171 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
     });
 
     result.sort((a, b) => {
-    if (a.icd_10 === b.icd_10) {
-      return a.age_id - b.age_id;
-    }
+      if (a.icd_10 === b.icd_10) {
+        return a.age_id - b.age_id;
+      }
       return a.icd_10.localeCompare(b.icd_10, undefined, { numeric: true });
     });
-    // const nestedData = groupByRSandAge(result);
     res.status(200).send({
       status: true,
       message: "data found",
       data: result,
     });
-    // .then((results) => {
-    //   res.status(200).send({
-    //     status: true,
-    //     message: "data found",
-    //     data: results,
-    //   });
-    // })
-    // .catch((err) => {
-    //   res.status(422).send({
-    //     status: false,
-    //     message: err,
-    //   });
-    //   return;
-    // });
   } catch (err) {
     res.status(422).send({
       status: false,
       message: err,
     });
     return;
+  }
+};
+
+export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
+  const joi = Joi.extend(joiDate);
+  const schema = joi.object({
+    rsId: joi.string().required(),
+    periode: joi.date().format("YYYY-MM").required(),
+    page: joi.number().integer().min(1).default(1),
+    limit: joi.number().integer().min(1).max(100).default(100),
+  });
+
+  const { error, value } = schema.validate(req.query);
+  if (error) {
+    return res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+  }
+
+  let koders;
+  let periodeget;
+
+  if (req.user.jenisUserId == 4) {
+    if (req.query.rsId != req.user.satKerId) {
+      return res.status(404).send({
+        status: false,
+        message: "Kode RS Tidak Sesuai",
+      });
+    }
+    koders = req.user.satKerId;
+    periodeget = req.query.periode;
+  } else {
+    koders = req.query.rsId;
+    periodeget = req.query.periode;
+  }
+
+  try {
+    const satuSehat = await satu_sehat_id.findOne({
+      where: { kode_baru_faskes: koders },
+      attributes: ["organization_id"],
+    });
+
+    if (!satuSehat) {
+      return res.status(404).send({
+        status: false,
+        message: "OrganizationId Tidak Ada",
+      });
+    }
+
+    const organization_id = satuSehat.organization_id;
+
+    const page = value.page;
+    const limit = value.limit;
+    const offset = (page - 1) * limit;
+
+    const totalData = await rlLimaTitikSatuSatuSehat.count({
+      where: {
+        organization_id,
+        periode: periodeget,
+      },
+    });
+
+    let result = await rlLimaTitikSatuSatuSehat.findAll({
+      where: {
+        organization_id,
+        periode: periodeget,
+      },
+      attributes: [
+        "icd_10",
+        "diagnosis",
+        "periode",
+        "male_new_cases",
+        "females_new_cases",
+        "total_new_cases",
+        "male_visits",
+        "female_visits",
+        "total_visits",
+        "age_id",
+      ],
+      include: [
+        {
+          model: AgeGroups,
+          attributes: ["name"],
+          required: false,
+        },
+        {
+          model: satu_sehat_id,
+          attributes: ["organization_id", "kode_baru_faskes"],
+          required: false,
+          include: [
+            {
+              model: users_sso,
+              attributes: ["nama", "rs_id"],
+              required: false,
+            },
+          ],
+        },
+      ],
+      order: [
+        ["icd_10", "ASC"],
+        ["age_id", "ASC"],
+      ],
+      limit,
+      offset,
+    });
+
+    if (result.length === 0) {
+      return res.status(200).send({
+        status: true,
+        message: "data found",
+        satu_sehat_id: null,
+        data: [],
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          pages: 0,
+        },
+      });
+    }
+
+    // Ambil satu_sehat_id dan users_sso dari data pertama
+    const satuSehatData = result[0].satu_sehat_id;
+
+    // Hapus properti satu_sehat_id di tiap record agar tidak duplikat
+    result = result.map((item) => {
+      const plain = item.get({ plain: true });
+      delete plain.satu_sehat_id;
+      return plain;
+    });
+
+    res.status(200).send({
+      status: true,
+      message: "data found",
+      satu_sehat_id: satuSehatData,
+      data: result,
+      pagination: {
+        total: totalData,
+        page,
+        limit,
+        pages: Math.ceil(totalData / limit),
+      },
+    });
+  } catch (err) {
+    res.status(422).send({
+      status: false,
+      message: err.message || err,
+    });
   }
 };
 
@@ -605,7 +734,6 @@ function groupByICDandAge(results) {
     return group;
   });
 }
-
 
 export const insertdataRLLimaTitikSatu = async (req, res) => {
   const schema = Joi.object({
@@ -1234,7 +1362,6 @@ export const deleteDataRLLimaTitikSatu = async (req, res) => {
 };
 
 export const getDataRLLimaTitikSatuExternal = (req, res) => {
-
   // let whereClause = {}
 
   //   if(req.query.rsId != req.user.satKerId){
@@ -1247,15 +1374,23 @@ export const getDataRLLimaTitikSatuExternal = (req, res) => {
   const whereClause = {
     rs_id: req.user.satKerId,
     periode: req.query.periode,
-  }
+  };
 
   rlLimaTitikSatuDetail
     .findAll({
       include: {
         model: icd,
-        attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group"],
+        attributes: [
+          "id",
+          "icd_code",
+          "description_code",
+          "icd_code_group",
+          "description_code_group",
+        ],
       },
-      attributes: ["id", "periode",
+      attributes: [
+        "id",
+        "periode",
         "jumlah_L_dibawah_1_jam",
         "jumlah_P_dibawah_1_jam",
         "jumlah_L_1_sampai_23_jam",
@@ -1311,7 +1446,8 @@ export const getDataRLLimaTitikSatuExternal = (req, res) => {
         "total_kasus_baru",
         "jumlah_kunjungan_L",
         "jumlah_kunjungan_P",
-        "total_jumlah_kunjungan"],
+        "total_jumlah_kunjungan",
+      ],
       where: whereClause,
     })
     .then((results) => {
@@ -1336,66 +1472,65 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     periodeTahun: Joi.number().required(),
     data: Joi.array()
       .items(
-        Joi.object()
-          .keys({
-            icdId: Joi.number().required(),
-            jumlahDiBawah1JamL: Joi.number().min(0).required(),
-            jumlahDibawah1JamP: Joi.number().min(0).required(),
-            jumlah1Sampai23JamL: Joi.number().min(0).required(),
-            jumlah1Sampai23JamP: Joi.number().min(0).required(),
-            jumlah1Sampai7HariL: Joi.number().min(0).required(),
-            jumlah1Sampai7HariP: Joi.number().min(0).required(),
-            jumlah8Sampai28HariL: Joi.number().min(0).required(),
-            jumlah8Sampai28HariP: Joi.number().min(0).required(),
-            jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
-            jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
-            jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
-            jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
-            jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
-            jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
-            jumlah1Sampai4TahunL: Joi.number().min(0).required(),
-            jumlah1Sampai4TahunP: Joi.number().min(0).required(),
-            jumlah5Sampai9TahunL: Joi.number().min(0).required(),
-            jumlah5Sampai9TahunP: Joi.number().min(0).required(),
-            jumlah10Sampai14TahunL: Joi.number().min(0).required(),
-            jumlah10Sampai14TahunP: Joi.number().min(0).required(),
-            jumlah15Sampai19TahunL: Joi.number().min(0).required(),
-            jumlah15Sampai19TahunP: Joi.number().min(0).required(),
-            jumlah20Sampai24TahunL: Joi.number().min(0).required(),
-            jumlah20Sampai24TahunP: Joi.number().min(0).required(),
-            jumlah25Sampai29TahunL: Joi.number().min(0).required(),
-            jumlah25Sampai29TahunP: Joi.number().min(0).required(),
-            jumlah30Sampai34TahunL: Joi.number().min(0).required(),
-            jumlah30Sampai34TahunP: Joi.number().min(0).required(),
-            jumlah35Sampai39TahunL: Joi.number().min(0).required(),
-            jumlah35Sampai39TahunP: Joi.number().min(0).required(),
-            jumlah40Sampai44TahunL: Joi.number().min(0).required(),
-            jumlah40Sampai44TahunP: Joi.number().min(0).required(),
-            jumlah45Sampai49TahunL: Joi.number().min(0).required(),
-            jumlah45Sampai49TahunP: Joi.number().min(0).required(),
-            jumlah50Sampai54TahunL: Joi.number().min(0).required(),
-            jumlah50Sampai54TahunP: Joi.number().min(0).required(),
-            jumlah55Sampai59TahunL: Joi.number().min(0).required(),
-            jumlah55Sampai59TahunP: Joi.number().min(0).required(),
-            jumlah60Sampai64TahunL: Joi.number().min(0).required(),
-            jumlah60Sampai64TahunP: Joi.number().min(0).required(),
-            jumlah65Sampai69TahunL: Joi.number().min(0).required(),
-            jumlah65Sampai69TahunP: Joi.number().min(0).required(),
-            jumlah70Sampai74TahunL: Joi.number().min(0).required(),
-            jumlah70Sampai74TahunP: Joi.number().min(0).required(),
-            jumlah75Sampai79TahunL: Joi.number().min(0).required(),
-            jumlah75Sampai79TahunP: Joi.number().min(0).required(),
-            jumlah80Sampai84TahunL: Joi.number().min(0).required(),
-            jumlah80Sampai84TahunP: Joi.number().min(0).required(),
-            jumlahDiatas85TahunL: Joi.number().min(0).required(),
-            jumlahDiatas85TahunP: Joi.number().min(0).required(),
-            jumlahKasusBaruL: Joi.number().min(0).required(),
-            jumlahKasusBaruP: Joi.number().min(0).required(),
-            totalKasusBaru: Joi.number().min(0).required(),
-            jumlahKunjunganL: Joi.number().min(0).required(),
-            jumlahKunjunganP: Joi.number().min(0).required(),
-            totalJumlahKunjungan: Joi.number().min(0).required(),
-          })
+        Joi.object().keys({
+          icdId: Joi.number().required(),
+          jumlahDiBawah1JamL: Joi.number().min(0).required(),
+          jumlahDibawah1JamP: Joi.number().min(0).required(),
+          jumlah1Sampai23JamL: Joi.number().min(0).required(),
+          jumlah1Sampai23JamP: Joi.number().min(0).required(),
+          jumlah1Sampai7HariL: Joi.number().min(0).required(),
+          jumlah1Sampai7HariP: Joi.number().min(0).required(),
+          jumlah8Sampai28HariL: Joi.number().min(0).required(),
+          jumlah8Sampai28HariP: Joi.number().min(0).required(),
+          jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
+          jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
+          jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
+          jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
+          jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
+          jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
+          jumlah1Sampai4TahunL: Joi.number().min(0).required(),
+          jumlah1Sampai4TahunP: Joi.number().min(0).required(),
+          jumlah5Sampai9TahunL: Joi.number().min(0).required(),
+          jumlah5Sampai9TahunP: Joi.number().min(0).required(),
+          jumlah10Sampai14TahunL: Joi.number().min(0).required(),
+          jumlah10Sampai14TahunP: Joi.number().min(0).required(),
+          jumlah15Sampai19TahunL: Joi.number().min(0).required(),
+          jumlah15Sampai19TahunP: Joi.number().min(0).required(),
+          jumlah20Sampai24TahunL: Joi.number().min(0).required(),
+          jumlah20Sampai24TahunP: Joi.number().min(0).required(),
+          jumlah25Sampai29TahunL: Joi.number().min(0).required(),
+          jumlah25Sampai29TahunP: Joi.number().min(0).required(),
+          jumlah30Sampai34TahunL: Joi.number().min(0).required(),
+          jumlah30Sampai34TahunP: Joi.number().min(0).required(),
+          jumlah35Sampai39TahunL: Joi.number().min(0).required(),
+          jumlah35Sampai39TahunP: Joi.number().min(0).required(),
+          jumlah40Sampai44TahunL: Joi.number().min(0).required(),
+          jumlah40Sampai44TahunP: Joi.number().min(0).required(),
+          jumlah45Sampai49TahunL: Joi.number().min(0).required(),
+          jumlah45Sampai49TahunP: Joi.number().min(0).required(),
+          jumlah50Sampai54TahunL: Joi.number().min(0).required(),
+          jumlah50Sampai54TahunP: Joi.number().min(0).required(),
+          jumlah55Sampai59TahunL: Joi.number().min(0).required(),
+          jumlah55Sampai59TahunP: Joi.number().min(0).required(),
+          jumlah60Sampai64TahunL: Joi.number().min(0).required(),
+          jumlah60Sampai64TahunP: Joi.number().min(0).required(),
+          jumlah65Sampai69TahunL: Joi.number().min(0).required(),
+          jumlah65Sampai69TahunP: Joi.number().min(0).required(),
+          jumlah70Sampai74TahunL: Joi.number().min(0).required(),
+          jumlah70Sampai74TahunP: Joi.number().min(0).required(),
+          jumlah75Sampai79TahunL: Joi.number().min(0).required(),
+          jumlah75Sampai79TahunP: Joi.number().min(0).required(),
+          jumlah80Sampai84TahunL: Joi.number().min(0).required(),
+          jumlah80Sampai84TahunP: Joi.number().min(0).required(),
+          jumlahDiatas85TahunL: Joi.number().min(0).required(),
+          jumlahDiatas85TahunP: Joi.number().min(0).required(),
+          jumlahKasusBaruL: Joi.number().min(0).required(),
+          jumlahKasusBaruP: Joi.number().min(0).required(),
+          totalKasusBaru: Joi.number().min(0).required(),
+          jumlahKunjunganL: Joi.number().min(0).required(),
+          jumlahKunjunganP: Joi.number().min(0).required(),
+          totalJumlahKunjungan: Joi.number().min(0).required(),
+        })
       )
       .required(),
   });
@@ -1408,15 +1543,14 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     });
   }
 
-  
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-based value, so we add 1
 
-
   if (
-    req.body.periodeTahun > currentYear || 
-    (req.body.periodeTahun === currentYear && req.body.periodeBulan >= currentMonth)
+    req.body.periodeTahun > currentYear ||
+    (req.body.periodeTahun === currentYear &&
+      req.body.periodeBulan >= currentMonth)
   ) {
     return res.status(400).send({
       status: false,
@@ -1424,18 +1558,20 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     });
   }
 
-  const idToIndexes = new Map(); 
+  const idToIndexes = new Map();
   value.data.forEach((it, idx) => {
     const key = String(Number(it.icdId));
     const arr = idToIndexes.get(key) || [];
-    arr.push(idx + 1); 
+    arr.push(idx + 1);
     idToIndexes.set(key, arr);
   });
 
   const dupMsgs = [];
   idToIndexes.forEach((positions, key) => {
     if (positions.length > 1) {
-      dupMsgs.push(`ICD id ${key} duplikat pada data ke-${positions.join(", ")}.`);
+      dupMsgs.push(
+        `ICD id ${key} duplikat pada data ke-${positions.join(", ")}.`
+      );
     }
   });
   if (dupMsgs.length > 0) {
@@ -1450,16 +1586,19 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 
   const masterRows = await icd.findAll({
     where: {
-      [Op.and]: [
-        { id: { [Op.in]: ids } },
-        { status_rawat_jalan: 1 }, 
-      ],
+      [Op.and]: [{ id: { [Op.in]: ids } }, { status_rawat_jalan: 1 }],
     },
-    attributes: ["id", "icd_code", "description_code", "status_laki", "status_perempuan"],
+    attributes: [
+      "id",
+      "icd_code",
+      "description_code",
+      "status_laki",
+      "status_perempuan",
+    ],
     raw: true,
   });
 
-  const masterMap = new Map(masterRows.map(r => [Number(r.id), r]));
+  const masterMap = new Map(masterRows.map((r) => [Number(r.id), r]));
   const errors = [];
 
   // validator parameter
@@ -1469,16 +1608,18 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     const master = masterMap.get(idNum);
 
     if (!master) {
-      errors.push(`Data ke-${no} (ICD id ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`);
+      errors.push(
+        `Data ke-${no} (ICD id ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`
+      );
       return;
     }
 
     const { status_laki, status_perempuan } = master;
-    const lKeys = Object.keys(item).filter(k => k.endsWith("L"));
-    const pKeys = Object.keys(item).filter(k => k.endsWith("P"));
+    const lKeys = Object.keys(item).filter((k) => k.endsWith("L"));
+    const pKeys = Object.keys(item).filter((k) => k.endsWith("P"));
 
     if (Number(status_laki) === 0) {
-      const filledL = lKeys.filter(k => item[k] > 0);
+      const filledL = lKeys.filter((k) => item[k] > 0);
       if (filledL.length > 0) {
         errors.push(
           `Data ke-${no} dengan ICD ID = ${item.icdId} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
@@ -1487,7 +1628,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     }
 
     if (Number(status_perempuan) === 0) {
-      const filledP = pKeys.filter(k => item[k] > 0);
+      const filledP = pKeys.filter((k) => item[k] > 0);
       if (filledP.length > 0) {
         errors.push(
           `Data ke-${no} (ICD ${item.icdId}) parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki-Laki.`
@@ -1504,7 +1645,9 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     });
   }
 
-  const periode = `${req.body.periodeTahun}-${String(req.body.periodeBulan).padStart(2, '0')}-01`;
+  const periode = `${req.body.periodeTahun}-${String(
+    req.body.periodeBulan
+  ).padStart(2, "0")}-01`;
 
   let transaction;
   try {
@@ -1519,17 +1662,13 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       { transaction }
     );
 
-
-
-
     const dataDetail = value.data.map((item) => {
-
       const totalL = Object.keys(item)
-        .filter(key => key.endsWith("L"))
+        .filter((key) => key.endsWith("L"))
         .reduce((sum, key) => sum + (item[key] || 0), 0);
 
       const totalP = Object.keys(item)
-        .filter(key => key.endsWith("P"))
+        .filter((key) => key.endsWith("P"))
         .reduce((sum, key) => sum + (item[key] || 0), 0);
 
       const total = totalL + totalP;
@@ -1549,10 +1688,14 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         jumlah_P_1_sampai_7_hari: item.jumlah1Sampai7HariP,
         jumlah_L_8_sampai_28_hari: item.jumlah8Sampai28HariL,
         jumlah_P_8_sampai_28_hari: item.jumlah8Sampai28HariP,
-        jumlah_L_29_hari_sampai_dibawah_3_bulan: item.jumlah29HariSampaiDibawah3BulanL,
-        jumlah_P_29_hari_sampai_dibawah_3_bulan: item.jumlah29HariSampaiDibawah3BulanP,
-        jumlah_L_3_bulan_sampai_dibawah_6_bulan: item.jumlah3BulanSampaiDibawah6BulanL,
-        jumlah_P_3_bulan_sampai_dibawah_6_bulan: item.jumlah3BulanSampaiDibawah6BulanP,
+        jumlah_L_29_hari_sampai_dibawah_3_bulan:
+          item.jumlah29HariSampaiDibawah3BulanL,
+        jumlah_P_29_hari_sampai_dibawah_3_bulan:
+          item.jumlah29HariSampaiDibawah3BulanP,
+        jumlah_L_3_bulan_sampai_dibawah_6_bulan:
+          item.jumlah3BulanSampaiDibawah6BulanL,
+        jumlah_P_3_bulan_sampai_dibawah_6_bulan:
+          item.jumlah3BulanSampaiDibawah6BulanP,
         jumlah_L_6_bulan_sampai_11_bulan: item.jumlah6BulanSampai11BulanL,
         jumlah_P_6_bulan_sampai_11_bulan: item.jumlah6BulanSampai11BulanP,
         jumlah_L_1_sampai_4_tahun: item.jumlah1Sampai4TahunL,
@@ -1607,16 +1750,20 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
     }
     if (val(item.jumlahKunjunganL) > totalL) {
-      relErrors.push(`Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
+      relErrors.push(
+        `Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`
+      );
     }
     if (val(item.jumlahKunjunganP) > totalP) {
-      relErrors.push(`Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
+      relErrors.push(
+        `Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Perempuan`
+      );
     }
 
     if (relErrors.length > 0) {
       return res.status(400).send({
         status: false,
-        message:relErrors,
+        message: relErrors,
         // errors: relErrors,
       });
     }
@@ -1624,20 +1771,62 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     await rlLimaTitikSatuDetail.bulkCreate(dataDetail, {
       transaction,
       updateOnDuplicate: [
-        "jumlah_L_dibawah_1_jam", "jumlah_P_dibawah_1_jam", "jumlah_L_1_sampai_23_jam", "jumlah_P_1_sampai_23_jam",
-        "jumlah_L_1_sampai_7_hari", "jumlah_P_1_sampai_7_hari", "jumlah_L_8_sampai_28_hari", "jumlah_P_8_sampai_28_hari",
-        "jumlah_L_29_hari_sampai_dibawah_3_bulan", "jumlah_P_29_hari_sampai_dibawah_3_bulan", "jumlah_L_3_bulan_sampai_dibawah_6_bulan",
-        "jumlah_P_3_bulan_sampai_dibawah_6_bulan", "jumlah_L_6_bulan_sampai_11_bulan", "jumlah_P_6_bulan_sampai_11_bulan",
-        "jumlah_L_1_sampai_4_tahun", "jumlah_P_1_sampai_4_tahun", "jumlah_L_5_sampai_9_tahun", "jumlah_P_5_sampai_9_tahun",
-        "jumlah_L_10_sampai_14_tahun", "jumlah_P_10_sampai_14_tahun", "jumlah_L_15_sampai_19_tahun", "jumlah_P_15_sampai_19_tahun",
-        "jumlah_L_20_sampai_24_tahun", "jumlah_P_20_sampai_24_tahun", "jumlah_L_25_sampai_29_tahun", "jumlah_P_25_sampai_29_tahun",
-        "jumlah_L_30_sampai_34_tahun", "jumlah_P_30_sampai_34_tahun", "jumlah_L_35_sampai_39_tahun", "jumlah_P_35_sampai_39_tahun",
-        "jumlah_L_40_sampai_44_tahun", "jumlah_P_40_sampai_44_tahun", "jumlah_L_45_sampai_49_tahun", "jumlah_P_45_sampai_49_tahun",
-        "jumlah_L_50_sampai_54_tahun", "jumlah_P_50_sampai_54_tahun", "jumlah_L_55_sampai_59_tahun", "jumlah_P_55_sampai_59_tahun",
-        "jumlah_L_60_sampai_64_tahun", "jumlah_P_60_sampai_64_tahun", "jumlah_L_65_sampai_69_tahun", "jumlah_P_65_sampai_69_tahun",
-        "jumlah_L_70_sampai_74_tahun", "jumlah_P_70_sampai_74_tahun", "jumlah_L_75_sampai_79_tahun", "jumlah_P_75_sampai_79_tahun",
-        "jumlah_L_80_sampai_84_tahun", "jumlah_P_80_sampai_84_tahun", "jumlah_L_diatas_85_tahun", "jumlah_P_diatas_85_tahun",
-        "jumlah_kasus_baru_L", "jumlah_kasus_baru_P", "total_kasus_baru", "jumlah_kunjungan_L", "jumlah_kunjungan_P", "total_jumlah_kunjungan"
+        "jumlah_L_dibawah_1_jam",
+        "jumlah_P_dibawah_1_jam",
+        "jumlah_L_1_sampai_23_jam",
+        "jumlah_P_1_sampai_23_jam",
+        "jumlah_L_1_sampai_7_hari",
+        "jumlah_P_1_sampai_7_hari",
+        "jumlah_L_8_sampai_28_hari",
+        "jumlah_P_8_sampai_28_hari",
+        "jumlah_L_29_hari_sampai_dibawah_3_bulan",
+        "jumlah_P_29_hari_sampai_dibawah_3_bulan",
+        "jumlah_L_3_bulan_sampai_dibawah_6_bulan",
+        "jumlah_P_3_bulan_sampai_dibawah_6_bulan",
+        "jumlah_L_6_bulan_sampai_11_bulan",
+        "jumlah_P_6_bulan_sampai_11_bulan",
+        "jumlah_L_1_sampai_4_tahun",
+        "jumlah_P_1_sampai_4_tahun",
+        "jumlah_L_5_sampai_9_tahun",
+        "jumlah_P_5_sampai_9_tahun",
+        "jumlah_L_10_sampai_14_tahun",
+        "jumlah_P_10_sampai_14_tahun",
+        "jumlah_L_15_sampai_19_tahun",
+        "jumlah_P_15_sampai_19_tahun",
+        "jumlah_L_20_sampai_24_tahun",
+        "jumlah_P_20_sampai_24_tahun",
+        "jumlah_L_25_sampai_29_tahun",
+        "jumlah_P_25_sampai_29_tahun",
+        "jumlah_L_30_sampai_34_tahun",
+        "jumlah_P_30_sampai_34_tahun",
+        "jumlah_L_35_sampai_39_tahun",
+        "jumlah_P_35_sampai_39_tahun",
+        "jumlah_L_40_sampai_44_tahun",
+        "jumlah_P_40_sampai_44_tahun",
+        "jumlah_L_45_sampai_49_tahun",
+        "jumlah_P_45_sampai_49_tahun",
+        "jumlah_L_50_sampai_54_tahun",
+        "jumlah_P_50_sampai_54_tahun",
+        "jumlah_L_55_sampai_59_tahun",
+        "jumlah_P_55_sampai_59_tahun",
+        "jumlah_L_60_sampai_64_tahun",
+        "jumlah_P_60_sampai_64_tahun",
+        "jumlah_L_65_sampai_69_tahun",
+        "jumlah_P_65_sampai_69_tahun",
+        "jumlah_L_70_sampai_74_tahun",
+        "jumlah_P_70_sampai_74_tahun",
+        "jumlah_L_75_sampai_79_tahun",
+        "jumlah_P_75_sampai_79_tahun",
+        "jumlah_L_80_sampai_84_tahun",
+        "jumlah_P_80_sampai_84_tahun",
+        "jumlah_L_diatas_85_tahun",
+        "jumlah_P_diatas_85_tahun",
+        "jumlah_kasus_baru_L",
+        "jumlah_kasus_baru_P",
+        "total_kasus_baru",
+        "jumlah_kunjungan_L",
+        "jumlah_kunjungan_P",
+        "total_jumlah_kunjungan",
       ],
     });
 
@@ -1664,62 +1853,61 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
   const schema = Joi.object({
     data: Joi.array()
       .items(
-        Joi.object()
-          .keys({
-            id: Joi.number().required(),
-            jumlahLDiBawah1Jam: Joi.number().min(0).required(),
-            jumlahPDibawah1Jam: Joi.number().min(0).required(),
-            jumlah1Sampai23JamL: Joi.number().min(0).required(),
-            jumlah1Sampai23JamP: Joi.number().min(0).required(),
-            jumlah1Sampai7HariL: Joi.number().min(0).required(),
-            jumlah1Sampai7HariP: Joi.number().min(0).required(),
-            jumlah8Sampai28HariL: Joi.number().min(0).required(),
-            jumlah8Sampai28HariP: Joi.number().min(0).required(),
-            jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
-            jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
-            jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
-            jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
-            jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
-            jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
-            jumlah1Sampai4TahunL: Joi.number().min(0).required(),
-            jumlah1Sampai4TahunP: Joi.number().min(0).required(),
-            jumlah5Sampai9TahunL: Joi.number().min(0).required(),
-            jumlah5Sampai9TahunP: Joi.number().min(0).required(),
-            jumlah10Sampai14TahunL: Joi.number().min(0).required(),
-            jumlah10Sampai14TahunP: Joi.number().min(0).required(),
-            jumlah15Sampai19TahunL: Joi.number().min(0).required(),
-            jumlah15Sampai19TahunP: Joi.number().min(0).required(),
-            jumlah20Sampai24TahunL: Joi.number().min(0).required(),
-            jumlah20Sampai24TahunP: Joi.number().min(0).required(),
-            jumlah25Sampai29TahunL: Joi.number().min(0).required(),
-            jumlah25Sampai29TahunP: Joi.number().min(0).required(),
-            jumlah30Sampai34TahunL: Joi.number().min(0).required(),
-            jumlah30Sampai34TahunP: Joi.number().min(0).required(),
-            jumlah35Sampai39TahunL: Joi.number().min(0).required(),
-            jumlah35Sampai39TahunP: Joi.number().min(0).required(),
-            jumlah40Sampai44TahunL: Joi.number().min(0).required(),
-            jumlah40Sampai44TahunP: Joi.number().min(0).required(),
-            jumlah45Sampai49TahunL: Joi.number().min(0).required(),
-            jumlah45Sampai49TahunP: Joi.number().min(0).required(),
-            jumlah50Sampai54TahunL: Joi.number().min(0).required(),
-            jumlah50Sampai54TahunP: Joi.number().min(0).required(),
-            jumlah55Sampai59TahunL: Joi.number().min(0).required(),
-            jumlah55Sampai59TahunP: Joi.number().min(0).required(),
-            jumlah60Sampai64TahunL: Joi.number().min(0).required(),
-            jumlah60Sampai64TahunP: Joi.number().min(0).required(),
-            jumlah65Sampai69TahunL: Joi.number().min(0).required(),
-            jumlah65Sampai69TahunP: Joi.number().min(0).required(),
-            jumlah70Sampai74TahunL: Joi.number().min(0).required(),
-            jumlah70Sampai74TahunP: Joi.number().min(0).required(),
-            jumlah75Sampai79TahunL: Joi.number().min(0).required(),
-            jumlah75Sampai79TahunP: Joi.number().min(0).required(),
-            jumlah80Sampai84TahunL: Joi.number().min(0).required(),
-            jumlah80Sampai84TahunP: Joi.number().min(0).required(),
-            jumlahDiatas85TahunL: Joi.number().min(0).required(),
-            jumlahDiatas85TahunP: Joi.number().min(0).required(),
-            jumlahKunjunganL: Joi.number().min(0).required(),
-            jumlahKunjunganP: Joi.number().min(0).required(),
-          })
+        Joi.object().keys({
+          id: Joi.number().required(),
+          jumlahLDiBawah1Jam: Joi.number().min(0).required(),
+          jumlahPDibawah1Jam: Joi.number().min(0).required(),
+          jumlah1Sampai23JamL: Joi.number().min(0).required(),
+          jumlah1Sampai23JamP: Joi.number().min(0).required(),
+          jumlah1Sampai7HariL: Joi.number().min(0).required(),
+          jumlah1Sampai7HariP: Joi.number().min(0).required(),
+          jumlah8Sampai28HariL: Joi.number().min(0).required(),
+          jumlah8Sampai28HariP: Joi.number().min(0).required(),
+          jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
+          jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
+          jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
+          jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
+          jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
+          jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
+          jumlah1Sampai4TahunL: Joi.number().min(0).required(),
+          jumlah1Sampai4TahunP: Joi.number().min(0).required(),
+          jumlah5Sampai9TahunL: Joi.number().min(0).required(),
+          jumlah5Sampai9TahunP: Joi.number().min(0).required(),
+          jumlah10Sampai14TahunL: Joi.number().min(0).required(),
+          jumlah10Sampai14TahunP: Joi.number().min(0).required(),
+          jumlah15Sampai19TahunL: Joi.number().min(0).required(),
+          jumlah15Sampai19TahunP: Joi.number().min(0).required(),
+          jumlah20Sampai24TahunL: Joi.number().min(0).required(),
+          jumlah20Sampai24TahunP: Joi.number().min(0).required(),
+          jumlah25Sampai29TahunL: Joi.number().min(0).required(),
+          jumlah25Sampai29TahunP: Joi.number().min(0).required(),
+          jumlah30Sampai34TahunL: Joi.number().min(0).required(),
+          jumlah30Sampai34TahunP: Joi.number().min(0).required(),
+          jumlah35Sampai39TahunL: Joi.number().min(0).required(),
+          jumlah35Sampai39TahunP: Joi.number().min(0).required(),
+          jumlah40Sampai44TahunL: Joi.number().min(0).required(),
+          jumlah40Sampai44TahunP: Joi.number().min(0).required(),
+          jumlah45Sampai49TahunL: Joi.number().min(0).required(),
+          jumlah45Sampai49TahunP: Joi.number().min(0).required(),
+          jumlah50Sampai54TahunL: Joi.number().min(0).required(),
+          jumlah50Sampai54TahunP: Joi.number().min(0).required(),
+          jumlah55Sampai59TahunL: Joi.number().min(0).required(),
+          jumlah55Sampai59TahunP: Joi.number().min(0).required(),
+          jumlah60Sampai64TahunL: Joi.number().min(0).required(),
+          jumlah60Sampai64TahunP: Joi.number().min(0).required(),
+          jumlah65Sampai69TahunL: Joi.number().min(0).required(),
+          jumlah65Sampai69TahunP: Joi.number().min(0).required(),
+          jumlah70Sampai74TahunL: Joi.number().min(0).required(),
+          jumlah70Sampai74TahunP: Joi.number().min(0).required(),
+          jumlah75Sampai79TahunL: Joi.number().min(0).required(),
+          jumlah75Sampai79TahunP: Joi.number().min(0).required(),
+          jumlah80Sampai84TahunL: Joi.number().min(0).required(),
+          jumlah80Sampai84TahunP: Joi.number().min(0).required(),
+          jumlahDiatas85TahunL: Joi.number().min(0).required(),
+          jumlahDiatas85TahunP: Joi.number().min(0).required(),
+          jumlahKunjunganL: Joi.number().min(0).required(),
+          jumlahKunjunganP: Joi.number().min(0).required(),
+        })
       )
       .required(),
   });
@@ -1740,7 +1928,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
     });
   }
 
-  const ids = value.data.map(item => item.id);
+  const ids = value.data.map((item) => item.id);
 
   // Step 2: Fetch all relevant records from rlLimaTitikSatuDetail
   const existing = await rlLimaTitikSatuDetail.findAll({
@@ -1750,15 +1938,15 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
   });
 
   // Step 3: Get the corresponding ICD codes based on icd_id
-  const icdIds = existing.map(record => record.icd_id);
+  const icdIds = existing.map((record) => record.icd_id);
   const masterRows = await icd.findAll({
     where: { id: icdIds },
     attributes: ["id", "status_laki", "status_perempuan"],
     raw: true,
   });
 
-  const masterMap = new Map(masterRows.map(r => [r.id, r]));
-  
+  const masterMap = new Map(masterRows.map((r) => [r.id, r]));
+
   const errors = [];
 
   value.data.forEach((item, idx) => {
@@ -1772,21 +1960,25 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
     }
 
     const { status_laki, status_perempuan } = master;
-    const lKeys = Object.keys(item).filter(k => k.endsWith("L"));
-    const pKeys = Object.keys(item).filter(k => k.endsWith("P"));
+    const lKeys = Object.keys(item).filter((k) => k.endsWith("L"));
+    const pKeys = Object.keys(item).filter((k) => k.endsWith("P"));
 
     // Validation for status_laki (Male) and status_perempuan (Female)
     if (Number(status_laki) === 0) {
-      const filledL = lKeys.filter(k => item[k] > 0);
+      const filledL = lKeys.filter((k) => item[k] > 0);
       if (filledL.length > 0) {
-        errors.push(`Data ke-${no} dengan ICD ID = ${item.icdId} tidak valid untuk Laki-laki.`);
+        errors.push(
+          `Data ke-${no} dengan ICD ID = ${item.icdId} tidak valid untuk Laki-laki.`
+        );
       }
     }
 
     if (Number(status_perempuan) === 0) {
-      const filledP = pKeys.filter(k => item[k] > 0);
+      const filledP = pKeys.filter((k) => item[k] > 0);
       if (filledP.length > 0) {
-        errors.push(`Data ke-${no} dengan ICD ID = ${item.icdId} tidak valid untuk Perempuan.`);
+        errors.push(
+          `Data ke-${no} dengan ICD ID = ${item.icdId} tidak valid untuk Perempuan.`
+        );
       }
     }
   });
@@ -1871,16 +2063,20 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       if (val(item.jumlahKunjunganL) > totalL) {
-        relErrors.push(`Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
+        relErrors.push(
+          `Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`
+        );
       }
       if (val(item.jumlahKunjunganP) > totalP) {
-        relErrors.push(`Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
+        relErrors.push(
+          `Data Jumlah Kasus Baru Perempuan Lebih Dari Jumlah Kunjungan Pasien Perempuan`
+        );
       }
 
       if (relErrors.length > 0) {
         return res.status(400).send({
           status: false,
-          message:relErrors,
+          message: relErrors,
           // errors: relErrors,
         });
       }
