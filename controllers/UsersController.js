@@ -979,7 +979,7 @@ apiKeyDevelopment
       if (!results) {
         res.status(404).send({
           status: false,
-          message: "user not found1",
+          message: "key not found",
         });
         return;
       }
@@ -1008,7 +1008,7 @@ apiKeyDevelopment
         if(!findUserResults){
           res.status(404).send({
             status: false,
-            message: "user not found2",
+            message: "user not found",
           });
           return;
         }
@@ -1127,7 +1127,7 @@ apiKeyDevelopment
       if (!results) {
         res.status(404).send({
           status: false,
-          message: "user not found1",
+          message: "key not found",
         });
         return;
       }
@@ -1148,7 +1148,7 @@ apiKeyDevelopment
         where: {
           rs_id: results.dataValues.rs_id,
           email : results.api_registration.dataValues.email_pendaftaran,
-          kriteria_user_id : 4,
+          kriteria_user_id : 2,
         },
       })
       .then((findUserResults) => {
@@ -1156,7 +1156,7 @@ apiKeyDevelopment
         if(!findUserResults){
           res.status(404).send({
             status: false,
-            message: "user not found2",
+            message: "user not found",
           });
           return;
         }
