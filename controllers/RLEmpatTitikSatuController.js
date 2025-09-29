@@ -8,6 +8,7 @@ import {
 import Joi from "joi";
 import joiDate from "@joi/date"
 import { icd } from "../models/ICDModel.js";
+import { Op } from "sequelize";
 
 export const getDataRLEmpatTitikSatu = (req, res) => {
   const joi = Joi.extend(joiDate) 
@@ -913,7 +914,6 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
       .required(),
   });
 
-
   const { error, value } = schema.validate(req.body);
   if (error) {
     return res.status(400).send({
@@ -1002,6 +1002,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         errors.push(`Data ke-${no} (ICD ${idNum}) tidak tepat karena bukan kode penyakit rawat inap.`);
         return;
       }
+
       item.icdId = master.id;
       const { status_laki, status_perempuan } = master;
       const keys = Object.keys(item);
@@ -1046,8 +1047,6 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
 
 
     const dataDetail = value.data.map((item) => {
-
-
       const totalL =
         val(item.jmlhPasHidupMatiUmurGen01JamL) +
         val(item.jmlhPasHidupMatiUmurGen123JamL) +
@@ -1291,8 +1290,8 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
           "total_pas_keluar_mati"
         ],
       });
-      // await transaction.commit();
-      await transaction.rollback();
+      await transaction.commit();
+      // await transaction.rollback();
       res.status(201).send({
         status: true,
         message: "data created",
@@ -1671,8 +1670,8 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
           transaction,
         });
       }
-      // await transaction.rollback();
-      await transaction.commit();
+      await transaction.rollback();
+      // await transaction.commit();
       return res.status(200).send({
         status: true,
         message: "Data updated successfully",

@@ -1161,6 +1161,7 @@ apiKeyDevelopment
         }
         
         const payloadObject = {
+          userId: findUserResults.dataValues.id,
           nama: findUserResults.dataValues.nama,
           email: findUserResults.dataValues.email,
           satKerId: findUserResults.dataValues.rs_id,
