@@ -11,6 +11,8 @@ import { satu_sehat_id, users_sso } from "../models/UserModel.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import { AgeGroups } from "../models/AgeGroups.js";
+import { Op } from "sequelize";
+import { icd } from "../models/ICDModel.js";
 dotenv.config();
 
 export const getDataRLLimaTitikSatu = (req, res) => {
