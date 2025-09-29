@@ -1496,61 +1496,62 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
     periodeTahun: Joi.number().required(),
     data: Joi.array()
       .items(
-        Joi.object().keys({
-          icd10: Joi.string().required(),
-          jumlahDiBawah1JamL: Joi.number().min(0).required(),
-          jumlahDibawah1JamP: Joi.number().min(0).required(),
-          jumlah1Sampai23JamL: Joi.number().min(0).required(),
-          jumlah1Sampai23JamP: Joi.number().min(0).required(),
-          jumlah1Sampai7HariL: Joi.number().min(0).required(),
-          jumlah1Sampai7HariP: Joi.number().min(0).required(),
-          jumlah8Sampai28HariL: Joi.number().min(0).required(),
-          jumlah8Sampai28HariP: Joi.number().min(0).required(),
-          jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
-          jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
-          jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
-          jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
-          jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
-          jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
-          jumlah1Sampai4TahunL: Joi.number().min(0).required(),
-          jumlah1Sampai4TahunP: Joi.number().min(0).required(),
-          jumlah5Sampai9TahunL: Joi.number().min(0).required(),
-          jumlah5Sampai9TahunP: Joi.number().min(0).required(),
-          jumlah10Sampai14TahunL: Joi.number().min(0).required(),
-          jumlah10Sampai14TahunP: Joi.number().min(0).required(),
-          jumlah15Sampai19TahunL: Joi.number().min(0).required(),
-          jumlah15Sampai19TahunP: Joi.number().min(0).required(),
-          jumlah20Sampai24TahunL: Joi.number().min(0).required(),
-          jumlah20Sampai24TahunP: Joi.number().min(0).required(),
-          jumlah25Sampai29TahunL: Joi.number().min(0).required(),
-          jumlah25Sampai29TahunP: Joi.number().min(0).required(),
-          jumlah30Sampai34TahunL: Joi.number().min(0).required(),
-          jumlah30Sampai34TahunP: Joi.number().min(0).required(),
-          jumlah35Sampai39TahunL: Joi.number().min(0).required(),
-          jumlah35Sampai39TahunP: Joi.number().min(0).required(),
-          jumlah40Sampai44TahunL: Joi.number().min(0).required(),
-          jumlah40Sampai44TahunP: Joi.number().min(0).required(),
-          jumlah45Sampai49TahunL: Joi.number().min(0).required(),
-          jumlah45Sampai49TahunP: Joi.number().min(0).required(),
-          jumlah50Sampai54TahunL: Joi.number().min(0).required(),
-          jumlah50Sampai54TahunP: Joi.number().min(0).required(),
-          jumlah55Sampai59TahunL: Joi.number().min(0).required(),
-          jumlah55Sampai59TahunP: Joi.number().min(0).required(),
-          jumlah60Sampai64TahunL: Joi.number().min(0).required(),
-          jumlah60Sampai64TahunP: Joi.number().min(0).required(),
-          jumlah65Sampai69TahunL: Joi.number().min(0).required(),
-          jumlah65Sampai69TahunP: Joi.number().min(0).required(),
-          jumlah70Sampai74TahunL: Joi.number().min(0).required(),
-          jumlah70Sampai74TahunP: Joi.number().min(0).required(),
-          jumlah75Sampai79TahunL: Joi.number().min(0).required(),
-          jumlah75Sampai79TahunP: Joi.number().min(0).required(),
-          jumlah80Sampai84TahunL: Joi.number().min(0).required(),
-          jumlah80Sampai84TahunP: Joi.number().min(0).required(),
-          jumlahDiatas85TahunL: Joi.number().min(0).required(),
-          jumlahDiatas85TahunP: Joi.number().min(0).required(),
-          jumlahKunjunganL: Joi.number().min(0).required(),
-          jumlahKunjunganP: Joi.number().min(0).required(),
-        })
+        Joi.object()
+          .keys({
+            icd10: Joi.string().required(),
+            jumlahKasusBaruPasienUmurKurangDari1JamL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmurKurangDari1JamP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1JamSampai23JamL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1JamSampai23JamP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1HariSampai7HariL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1HariSampai7HariP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur8HariSampai28HariL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur8HariSampai28HariP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur3BulanSampai6BulanL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur3BulanSampai6BulanP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur6BulanSampai11BulanL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur6BulanSampai11BulanP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1TahunSampai4TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur1TahunSampai4TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur5TahunSampai9TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur5TahunSampai9TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur10TahunSampai14TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur10TahunSampai14TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur15TahunSampai19TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur15TahunSampai19TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur20TahunSampai24TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur20TahunSampai24TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur25TahunSampai29TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur25TahunSampai29TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur30TahunSampai34TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur30TahunSampai34TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur35TahunSampai39TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur35TahunSampai39TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur40TahunSampai44TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur40TahunSampai44TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur45TahunSampai49TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur45TahunSampai49TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur50TahunSampai54TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur50TahunSampai54TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur55TahunSampai59TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur55TahunSampai59TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur60TahunSampai64TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur60TahunSampai64TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur65TahunSampai69TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur65TahunSampai69TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur70TahunSampai74TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur70TahunSampai74TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur75TahunSampai79TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur75TahunSampai79TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur80TahunSampai84TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmur80TahunSampai84TahunP: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL: Joi.number().min(0).required(),
+            jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP: Joi.number().min(0).required(),
+            jumlahKunjunganPasienL: Joi.number().min(0).required(),
+            jumlahKunjunganPasienP: Joi.number().min(0).required(),
+          })
       )
       .max(100)
       .required(),
@@ -1650,12 +1651,12 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const keys = Object.keys(item);
 
       const lKeys = keys
-        .filter((k) => k.endsWith("L"))
-        .filter((k) => k !== "jumlahKunjunganL");
+        .filter(k => k.endsWith("L"))
+        .filter(k => k !== "jumlahKunjunganPasienL");
 
       const pKeys = keys
-        .filter((k) => k.endsWith("P"))
-        .filter((k) => k !== "jumlahKunjunganP");
+        .filter(k => k.endsWith("P"))
+        .filter(k => k !== "jumlahKunjunganPasienP");
 
       if (Number(status_laki) === 0) {
         const filledL = lKeys.filter((k) => item[k] > 0);
@@ -1690,75 +1691,71 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 
     const dataDetail = value.data.map((item) => {
       const totalL =
-        val(item.jumlahLDiBawah1Jam) +
-        val(item.jumlah1Sampai23JamL) +
-        val(item.jumlah1Sampai7HariL) +
-        val(item.jumlah8Sampai28HariL) +
-        val(item.jumlah29HariSampaiDibawah3BulanL) +
-        val(item.jumlah3BulanSampaiDibawah6BulanL) +
-        val(item.jumlah6BulanSampai11BulanL) +
-        val(item.jumlah1Sampai4TahunL) +
-        val(item.jumlah5Sampai9TahunL) +
-        val(item.jumlah10Sampai14TahunL) +
-        val(item.jumlah15Sampai19TahunL) +
-        val(item.jumlah20Sampai24TahunL) +
-        val(item.jumlah25Sampai29TahunL) +
-        val(item.jumlah30Sampai34TahunL) +
-        val(item.jumlah35Sampai39TahunL) +
-        val(item.jumlah40Sampai44TahunL) +
-        val(item.jumlah45Sampai49TahunL) +
-        val(item.jumlah50Sampai54TahunL) +
-        val(item.jumlah55Sampai59TahunL) +
-        val(item.jumlah60Sampai64TahunL) +
-        val(item.jumlah65Sampai69TahunL) +
-        val(item.jumlah70Sampai74TahunL) +
-        val(item.jumlah75Sampai79TahunL) +
-        val(item.jumlah80Sampai84TahunL) +
-        val(item.jumlahDiatas85TahunL);
+        val(item.jumlahKasusBaruPasienUmurKurangDari1JamL) +
+        val(item.jumlahKasusBaruPasienUmur1JamSampai23JamL) +
+        val(item.jumlahKasusBaruPasienUmur1HariSampai7HariL) +
+        val(item.jumlahKasusBaruPasienUmur8HariSampai28HariL) +
+        val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL) +
+        val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL) +
+        val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL) +
+        val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL) +
+        val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL) +
+        val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL) +
+        val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL) +
+        val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL) +
+        val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL) +
+        val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL) +
+        val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL) +
+        val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL) +
+        val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL) +
+        val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL) +
+        val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL) +
+        val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL) +
+        val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL) +
+        val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL) +
+        val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL) +
+        val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL) +
+        val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL);
 
       const totalP =
-        val(item.jumlahPDibawah1Jam) +
-        val(item.jumlah1Sampai23JamP) +
-        val(item.jumlah1Sampai7HariP) +
-        val(item.jumlah8Sampai28HariP) +
-        val(item.jumlah29HariSampaiDibawah3BulanP) +
-        val(item.jumlah3BulanSampaiDibawah6BulanP) +
-        val(item.jumlah6BulanSampai11BulanP) +
-        val(item.jumlah1Sampai4TahunP) +
-        val(item.jumlah5Sampai9TahunP) +
-        val(item.jumlah10Sampai14TahunP) +
-        val(item.jumlah15Sampai19TahunP) +
-        val(item.jumlah20Sampai24TahunP) +
-        val(item.jumlah25Sampai29TahunP) +
-        val(item.jumlah30Sampai34TahunP) +
-        val(item.jumlah35Sampai39TahunP) +
-        val(item.jumlah40Sampai44TahunP) +
-        val(item.jumlah45Sampai49TahunP) +
-        val(item.jumlah50Sampai54TahunP) +
-        val(item.jumlah55Sampai59TahunP) +
-        val(item.jumlah60Sampai64TahunP) +
-        val(item.jumlah65Sampai69TahunP) +
-        val(item.jumlah70Sampai74TahunP) +
-        val(item.jumlah75Sampai79TahunP) +
-        val(item.jumlah80Sampai84TahunP) +
-        val(item.jumlahDiatas85TahunP);
+        val(item.jumlahKasusBaruPasienUmurKurangDari1JamP) +
+        val(item.jumlahKasusBaruPasienUmur1JamSampai23JamP) +
+        val(item.jumlahKasusBaruPasienUmur1HariSampai7HariP) +
+        val(item.jumlahKasusBaruPasienUmur8HariSampai28HariP) +
+        val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP) +
+        val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP) +
+        val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP) +
+        val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP) +
+        val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP) +
+        val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP) +
+        val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP) +
+        val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP) +
+        val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP) +
+        val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP) +
+        val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP) +
+        val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP) +
+        val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP) +
+        val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP) +
+        val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP) +
+        val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP) +
+        val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP) +
+        val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP) +
+        val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP) +
+        val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP) +
+        val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP);
 
       const total = totalL + totalP;
-      const totalkunjungan =
-        val(item.jumlahKunjunganL) + val(item.jumlahKunjunganP);
+      const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       const relErrors = [];
       if (total <= totalkunjungan) {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
-      if (val(item.jumlahKunjunganL) >= totalL) {
-        relErrors.push(
-          `Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`
-        );
+      
+      if (val(item.jumlahKunjunganPasienL) >= totalL) {
+        relErrors.push(`Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
-      if (val(item.jumlahKunjunganP) >= totalP) {
-        relErrors.push(
-          `Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`
-        );
+      if (val(item.jumlahKunjunganPasienP) >= totalP) {
+        relErrors.push(`Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
       if (relErrors.length > 0) {
@@ -1773,65 +1770,61 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         rs_id: req.user.satKerId,
         periode,
         icd_id: item.icdId,
-        jumlah_L_dibawah_1_jam: item.jumlahDiBawah1JamL,
-        jumlah_P_dibawah_1_jam: item.jumlahDibawah1JamP,
-        jumlah_L_1_sampai_23_jam: item.jumlah1Sampai23JamL,
-        jumlah_P_1_sampai_23_jam: item.jumlah1Sampai23JamP,
-        jumlah_L_1_sampai_7_hari: item.jumlah1Sampai7HariL,
-        jumlah_P_1_sampai_7_hari: item.jumlah1Sampai7HariP,
-        jumlah_L_8_sampai_28_hari: item.jumlah8Sampai28HariL,
-        jumlah_P_8_sampai_28_hari: item.jumlah8Sampai28HariP,
-        jumlah_L_29_hari_sampai_dibawah_3_bulan:
-          item.jumlah29HariSampaiDibawah3BulanL,
-        jumlah_P_29_hari_sampai_dibawah_3_bulan:
-          item.jumlah29HariSampaiDibawah3BulanP,
-        jumlah_L_3_bulan_sampai_dibawah_6_bulan:
-          item.jumlah3BulanSampaiDibawah6BulanL,
-        jumlah_P_3_bulan_sampai_dibawah_6_bulan:
-          item.jumlah3BulanSampaiDibawah6BulanP,
-        jumlah_L_6_bulan_sampai_11_bulan: item.jumlah6BulanSampai11BulanL,
-        jumlah_P_6_bulan_sampai_11_bulan: item.jumlah6BulanSampai11BulanP,
-        jumlah_L_1_sampai_4_tahun: item.jumlah1Sampai4TahunL,
-        jumlah_P_1_sampai_4_tahun: item.jumlah1Sampai4TahunP,
-        jumlah_L_5_sampai_9_tahun: item.jumlah5Sampai9TahunL,
-        jumlah_P_5_sampai_9_tahun: item.jumlah5Sampai9TahunP,
-        jumlah_L_10_sampai_14_tahun: item.jumlah10Sampai14TahunL,
-        jumlah_P_10_sampai_14_tahun: item.jumlah10Sampai14TahunP,
-        jumlah_L_15_sampai_19_tahun: item.jumlah15Sampai19TahunL,
-        jumlah_P_15_sampai_19_tahun: item.jumlah15Sampai19TahunP,
-        jumlah_L_20_sampai_24_tahun: item.jumlah20Sampai24TahunL,
-        jumlah_P_20_sampai_24_tahun: item.jumlah20Sampai24TahunP,
-        jumlah_L_25_sampai_29_tahun: item.jumlah25Sampai29TahunL,
-        jumlah_P_25_sampai_29_tahun: item.jumlah25Sampai29TahunP,
-        jumlah_L_30_sampai_34_tahun: item.jumlah30Sampai34TahunL,
-        jumlah_P_30_sampai_34_tahun: item.jumlah30Sampai34TahunP,
-        jumlah_L_35_sampai_39_tahun: item.jumlah35Sampai39TahunL,
-        jumlah_P_35_sampai_39_tahun: item.jumlah35Sampai39TahunP,
-        jumlah_L_40_sampai_44_tahun: item.jumlah40Sampai44TahunL,
-        jumlah_P_40_sampai_44_tahun: item.jumlah40Sampai44TahunP,
-        jumlah_L_45_sampai_49_tahun: item.jumlah45Sampai49TahunL,
-        jumlah_P_45_sampai_49_tahun: item.jumlah45Sampai49TahunP,
-        jumlah_L_50_sampai_54_tahun: item.jumlah50Sampai54TahunL,
-        jumlah_P_50_sampai_54_tahun: item.jumlah50Sampai54TahunP,
-        jumlah_L_55_sampai_59_tahun: item.jumlah55Sampai59TahunL,
-        jumlah_P_55_sampai_59_tahun: item.jumlah55Sampai59TahunP,
-        jumlah_L_60_sampai_64_tahun: item.jumlah60Sampai64TahunL,
-        jumlah_P_60_sampai_64_tahun: item.jumlah60Sampai64TahunP,
-        jumlah_L_65_sampai_69_tahun: item.jumlah65Sampai69TahunL,
-        jumlah_P_65_sampai_69_tahun: item.jumlah65Sampai69TahunP,
-        jumlah_L_70_sampai_74_tahun: item.jumlah70Sampai74TahunL,
-        jumlah_P_70_sampai_74_tahun: item.jumlah70Sampai74TahunP,
-        jumlah_L_75_sampai_79_tahun: item.jumlah75Sampai79TahunL,
-        jumlah_P_75_sampai_79_tahun: item.jumlah75Sampai79TahunP,
-        jumlah_L_80_sampai_84_tahun: item.jumlah80Sampai84TahunL,
-        jumlah_P_80_sampai_84_tahun: item.jumlah80Sampai84TahunP,
-        jumlah_L_diatas_85_tahun: item.jumlahDiatas85TahunL,
-        jumlah_P_diatas_85_tahun: item.jumlahDiatas85TahunP,
+        jumlah_L_dibawah_1_jam: item.jumlahKasusBaruPasienUmurKurangDari1JamL,
+        jumlah_P_dibawah_1_jam: item.jumlahKasusBaruPasienUmurKurangDari1JamP,
+        jumlah_L_1_sampai_23_jam: item.jumlahKasusBaruPasienUmur1JamSampai23JamL,
+        jumlah_P_1_sampai_23_jam: item.jumlahKasusBaruPasienUmur1JamSampai23JamP,
+        jumlah_L_1_sampai_7_hari: item.jumlahKasusBaruPasienUmur1HariSampai7HariL,
+        jumlah_P_1_sampai_7_hari: item.jumlahKasusBaruPasienUmur1HariSampai7HariP,
+        jumlah_L_8_sampai_28_hari: item.jumlahKasusBaruPasienUmur8HariSampai28HariL,
+        jumlah_P_8_sampai_28_hari: item.jumlahKasusBaruPasienUmur8HariSampai28HariP,
+        jumlah_L_29_hari_sampai_dibawah_3_bulan: item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL,
+        jumlah_P_29_hari_sampai_dibawah_3_bulan: item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP,
+        jumlah_L_3_bulan_sampai_dibawah_6_bulan: item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL,
+        jumlah_P_3_bulan_sampai_dibawah_6_bulan: item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP,
+        jumlah_L_6_bulan_sampai_11_bulan: item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL,
+        jumlah_P_6_bulan_sampai_11_bulan: item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP,
+        jumlah_L_1_sampai_4_tahun: item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL,
+        jumlah_P_1_sampai_4_tahun: item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP,
+        jumlah_L_5_sampai_9_tahun: item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL,
+        jumlah_P_5_sampai_9_tahun: item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP,
+        jumlah_L_10_sampai_14_tahun: item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL,
+        jumlah_P_10_sampai_14_tahun: item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP,
+        jumlah_L_15_sampai_19_tahun: item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL,
+        jumlah_P_15_sampai_19_tahun: item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP,
+        jumlah_L_20_sampai_24_tahun: item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL,
+        jumlah_P_20_sampai_24_tahun: item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP,
+        jumlah_L_25_sampai_29_tahun: item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL,
+        jumlah_P_25_sampai_29_tahun: item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP,
+        jumlah_L_30_sampai_34_tahun: item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL,
+        jumlah_P_30_sampai_34_tahun: item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP,
+        jumlah_L_35_sampai_39_tahun: item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL,
+        jumlah_P_35_sampai_39_tahun: item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP,
+        jumlah_L_40_sampai_44_tahun: item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL,
+        jumlah_P_40_sampai_44_tahun: item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP,
+        jumlah_L_45_sampai_49_tahun: item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL,
+        jumlah_P_45_sampai_49_tahun: item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP,
+        jumlah_L_50_sampai_54_tahun: item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL,
+        jumlah_P_50_sampai_54_tahun: item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP,
+        jumlah_L_55_sampai_59_tahun: item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL,
+        jumlah_P_55_sampai_59_tahun: item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP,
+        jumlah_L_60_sampai_64_tahun: item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL,
+        jumlah_P_60_sampai_64_tahun: item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP,
+        jumlah_L_65_sampai_69_tahun: item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL,
+        jumlah_P_65_sampai_69_tahun: item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP,
+        jumlah_L_70_sampai_74_tahun: item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL,
+        jumlah_P_70_sampai_74_tahun: item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP,
+        jumlah_L_75_sampai_79_tahun: item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL,
+        jumlah_P_75_sampai_79_tahun: item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP,
+        jumlah_L_80_sampai_84_tahun: item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL,
+        jumlah_P_80_sampai_84_tahun: item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP,
+        jumlah_L_diatas_85_tahun: item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL,
+        jumlah_P_diatas_85_tahun: item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP,
         jumlah_kasus_baru_L: totalL,
         jumlah_kasus_baru_P: totalP,
         total_kasus_baru: total,
-        jumlah_kunjungan_L: item.jumlahKunjunganL,
-        jumlah_kunjungan_P: item.jumlahKunjunganP,
+        jumlah_kunjungan_L: item.jumlahKunjunganPasienL,
+        jumlah_kunjungan_P: item.jumlahKunjunganPasienP,
         total_jumlah_kunjungan: totalkunjungan,
         user_id: req.user.userId,
       };
@@ -1977,59 +1970,60 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
   const itemSchema = Joi.object({
     id: Joi.number().required(),
-    jumlahDiBawah1JamL: Joi.number().min(0).required(),
-    jumlahDibawah1JamP: Joi.number().min(0).required(),
-    jumlah1Sampai23JamL: Joi.number().min(0).required(),
-    jumlah1Sampai23JamP: Joi.number().min(0).required(),
-    jumlah1Sampai7HariL: Joi.number().min(0).required(),
-    jumlah1Sampai7HariP: Joi.number().min(0).required(),
-    jumlah8Sampai28HariL: Joi.number().min(0).required(),
-    jumlah8Sampai28HariP: Joi.number().min(0).required(),
-    jumlah29HariSampaiDibawah3BulanL: Joi.number().min(0).required(),
-    jumlah29HariSampaiDibawah3BulanP: Joi.number().min(0).required(),
-    jumlah3BulanSampaiDibawah6BulanL: Joi.number().min(0).required(),
-    jumlah3BulanSampaiDibawah6BulanP: Joi.number().min(0).required(),
-    jumlah6BulanSampai11BulanL: Joi.number().min(0).required(),
-    jumlah6BulanSampai11BulanP: Joi.number().min(0).required(),
-    jumlah1Sampai4TahunL: Joi.number().min(0).required(),
-    jumlah1Sampai4TahunP: Joi.number().min(0).required(),
-    jumlah5Sampai9TahunL: Joi.number().min(0).required(),
-    jumlah5Sampai9TahunP: Joi.number().min(0).required(),
-    jumlah10Sampai14TahunL: Joi.number().min(0).required(),
-    jumlah10Sampai14TahunP: Joi.number().min(0).required(),
-    jumlah15Sampai19TahunL: Joi.number().min(0).required(),
-    jumlah15Sampai19TahunP: Joi.number().min(0).required(),
-    jumlah20Sampai24TahunL: Joi.number().min(0).required(),
-    jumlah20Sampai24TahunP: Joi.number().min(0).required(),
-    jumlah25Sampai29TahunL: Joi.number().min(0).required(),
-    jumlah25Sampai29TahunP: Joi.number().min(0).required(),
-    jumlah30Sampai34TahunL: Joi.number().min(0).required(),
-    jumlah30Sampai34TahunP: Joi.number().min(0).required(),
-    jumlah35Sampai39TahunL: Joi.number().min(0).required(),
-    jumlah35Sampai39TahunP: Joi.number().min(0).required(),
-    jumlah40Sampai44TahunL: Joi.number().min(0).required(),
-    jumlah40Sampai44TahunP: Joi.number().min(0).required(),
-    jumlah45Sampai49TahunL: Joi.number().min(0).required(),
-    jumlah45Sampai49TahunP: Joi.number().min(0).required(),
-    jumlah50Sampai54TahunL: Joi.number().min(0).required(),
-    jumlah50Sampai54TahunP: Joi.number().min(0).required(),
-    jumlah55Sampai59TahunL: Joi.number().min(0).required(),
-    jumlah55Sampai59TahunP: Joi.number().min(0).required(),
-    jumlah60Sampai64TahunL: Joi.number().min(0).required(),
-    jumlah60Sampai64TahunP: Joi.number().min(0).required(),
-    jumlah65Sampai69TahunL: Joi.number().min(0).required(),
-    jumlah65Sampai69TahunP: Joi.number().min(0).required(),
-    jumlah70Sampai74TahunL: Joi.number().min(0).required(),
-    jumlah70Sampai74TahunP: Joi.number().min(0).required(),
-    jumlah75Sampai79TahunL: Joi.number().min(0).required(),
-    jumlah75Sampai79TahunP: Joi.number().min(0).required(),
-    jumlah80Sampai84TahunL: Joi.number().min(0).required(),
-    jumlah80Sampai84TahunP: Joi.number().min(0).required(),
-    jumlahDiatas85TahunL: Joi.number().min(0).required(),
-    jumlahDiatas85TahunP: Joi.number().min(0).required(),
-    jumlahKunjunganL: Joi.number().min(0).required(),
-    jumlahKunjunganP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmurKurangDari1JamL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmurKurangDari1JamP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1JamSampai23JamL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1JamSampai23JamP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1HariSampai7HariL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1HariSampai7HariP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur8HariSampai28HariL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur8HariSampai28HariP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur3BulanSampai6BulanL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur3BulanSampai6BulanP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur6BulanSampai11BulanL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur6BulanSampai11BulanP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1TahunSampai4TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur1TahunSampai4TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur5TahunSampai9TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur5TahunSampai9TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur10TahunSampai14TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur10TahunSampai14TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur15TahunSampai19TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur15TahunSampai19TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur20TahunSampai24TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur20TahunSampai24TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur25TahunSampai29TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur25TahunSampai29TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur30TahunSampai34TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur30TahunSampai34TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur35TahunSampai39TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur35TahunSampai39TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur40TahunSampai44TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur40TahunSampai44TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur45TahunSampai49TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur45TahunSampai49TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur50TahunSampai54TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur50TahunSampai54TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur55TahunSampai59TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur55TahunSampai59TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur60TahunSampai64TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur60TahunSampai64TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur65TahunSampai69TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur65TahunSampai69TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur70TahunSampai74TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur70TahunSampai74TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur75TahunSampai79TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur75TahunSampai79TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur80TahunSampai84TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmur80TahunSampai84TahunP: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL: Joi.number().min(0).required(),
+    jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP: Joi.number().min(0).required(),
+    jumlahKunjunganPasienL: Joi.number().min(0).required(),
+    jumlahKunjunganPasienP: Joi.number().min(0).required(),
   });
+
   const schema = Joi.object({
     data: Joi.array()
       .items(itemSchema)
@@ -2137,23 +2131,24 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
 
     let toUpdate = [];
     const errorsIcd = [];
+    const relErrors = [];
 
     value.data.forEach((item, idx) => {
       const no = idx + 1;
       const cek = masterMap.get(item.icd_id);
       const keys = Object.keys(item);
-      const lKeys = keys
-        .filter((k) => k.endsWith("L"))
-        .filter((k) => k !== "jumlahKunjunganL");
-      const pKeys = keys
-        .filter((k) => k.endsWith("P"))
-        .filter((k) => k !== "jumlahKunjunganP");
 
-      const { status_laki, status_perempuan } = cek;
+      const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahKunjunganPasienL");
+      const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahKunjunganPasienP");
+      const { status_laki, status_perempuan } = cek || {};
+
+      if (!cek) {
+        errorsIcd.push(`Data ke-${no}: ICD master tidak ditemukan untuk icd_id = ${item.icd_id}.`);
+        return;
+      }
 
       if (Number(status_laki) === 0) {
-        console.log("laki ", status_laki);
-        const filledL = lKeys.filter((k) => val(item[k]) > 0);
+        const filledL = lKeys.filter(k => val(item[k]) > 0);
         if (filledL.length > 0) {
           errorsIcd.push(
             `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
@@ -2161,7 +2156,6 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
         }
       }
 
-      // Validasi untuk perempuan
       if (Number(status_perempuan) === 0) {
         const filledP = pKeys.filter((k) => val(item[k]) > 0);
         if (filledP.length > 0) {
@@ -2172,146 +2166,131 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       }
 
       const totalL = [
-        item.jumlahLDiBawah1Jam,
-        item.jumlah1Sampai23JamL,
-        item.jumlah1Sampai7HariL,
-        item.jumlah8Sampai28HariL,
-        item.jumlah29HariSampaiDibawah3BulanL,
-        item.jumlah3BulanSampaiDibawah6BulanL,
-        item.jumlah6BulanSampai11BulanL,
-        item.jumlah1Sampai4TahunL,
-        item.jumlah5Sampai9TahunL,
-        item.jumlah10Sampai14TahunL,
-        item.jumlah15Sampai19TahunL,
-        item.jumlah20Sampai24TahunL,
-        item.jumlah25Sampai29TahunL,
-        item.jumlah30Sampai34TahunL,
-        item.jumlah35Sampai39TahunL,
-        item.jumlah40Sampai44TahunL,
-        item.jumlah45Sampai49TahunL,
-        item.jumlah50Sampai54TahunL,
-        item.jumlah55Sampai59TahunL,
-        item.jumlah60Sampai64TahunL,
-        item.jumlah65Sampai69TahunL,
-        item.jumlah70Sampai74TahunL,
-        item.jumlah75Sampai79TahunL,
-        item.jumlah80Sampai84TahunL,
-        item.jumlahDiatas85TahunL,
+        item.jumlahKasusBaruPasienUmurKurangDari1JamL,
+        item.jumlahKasusBaruPasienUmur1JamSampai23JamL,
+        item.jumlahKasusBaruPasienUmur1HariSampai7HariL,
+        item.jumlahKasusBaruPasienUmur8HariSampai28HariL,
+        item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL,
+        item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL,
+        item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL,
+        item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL,
+        item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL,
+        item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL,
+        item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL,
+        item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL,
+        item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL,
+        item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL,
+        item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL,
+        item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL,
+        item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL,
+        item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL,
+        item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL,
+        item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL,
+        item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL,
+        item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL,
+        item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL,
+        item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL,
+        item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL,
       ].reduce((sum, x) => sum + val(x), 0);
 
       const totalP = [
-        item.jumlahPDibawah1Jam,
-        item.jumlah1Sampai23JamP,
-        item.jumlah1Sampai7HariP,
-        item.jumlah8Sampai28HariP,
-        item.jumlah29HariSampaiDibawah3BulanP,
-        item.jumlah3BulanSampaiDibawah6BulanP,
-        item.jumlah6BulanSampai11BulanP,
-        item.jumlah1Sampai4TahunP,
-        item.jumlah5Sampai9TahunP,
-        item.jumlah10Sampai14TahunP,
-        item.jumlah15Sampai19TahunP,
-        item.jumlah20Sampai24TahunP,
-        item.jumlah25Sampai29TahunP,
-        item.jumlah30Sampai34TahunP,
-        item.jumlah35Sampai39TahunP,
-        item.jumlah40Sampai44TahunP,
-        item.jumlah45Sampai49TahunP,
-        item.jumlah50Sampai54TahunP,
-        item.jumlah55Sampai59TahunP,
-        item.jumlah60Sampai64TahunP,
-        item.jumlah65Sampai69TahunP,
-        item.jumlah70Sampai74TahunP,
-        item.jumlah75Sampai79TahunP,
-        item.jumlah80Sampai84TahunP,
-        item.jumlahDiatas85TahunP,
+        item.jumlahKasusBaruPasienUmurKurangDari1JamP,
+        item.jumlahKasusBaruPasienUmur1JamSampai23JamP,
+        item.jumlahKasusBaruPasienUmur1HariSampai7HariP,
+        item.jumlahKasusBaruPasienUmur8HariSampai28HariP,
+        item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP,
+        item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP,
+        item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP,
+        item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP,
+        item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP,
+        item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP,
+        item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP,
+        item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP,
+        item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP,
+        item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP,
+        item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP,
+        item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP,
+        item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP,
+        item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP,
+        item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP,
+        item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP,
+        item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP,
+        item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP,
+        item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP,
+        item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP,
+        item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP,
       ].reduce((sum, x) => sum + val(x), 0);
 
       const total = totalL + totalP;
-      const totalkunjungan =
-        val(item.jumlahKunjunganL) + val(item.jumlahKunjunganP);
-      const relErrors = [];
-
+      const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       if (total <= totalkunjungan) {
-        relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
+        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru harus lebih dari Jumlah Kunjungan.`);
       }
-      if (val(item.jumlahKunjunganL) >= totalL) {
-        relErrors.push(
-          `Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`
-        );
+      if (val(item.jumlahKunjunganPasienL) >= totalL) {
+        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
-      if (val(item.jumlahKunjunganP) >= totalP) {
-        relErrors.push(
-          `Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`
-        );
+      if (val(item.jumlahKunjunganPasienP) >= totalP) {
+        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
       toUpdate.push({
         id: Number(item.id),
-        jumlah_L_dibawah_1_jam: val(item.jumlahDiBawah1JamL),
-        jumlah_P_dibawah_1_jam: val(item.jumlahDibawah1JamP),
-        jumlah_L_1_sampai_23_jam: val(item.jumlah1Sampai23JamL),
-        jumlah_P_1_sampai_23_jam: val(item.jumlah1Sampai23JamP),
-        jumlah_L_1_sampai_7_hari: val(item.jumlah1Sampai7HariL),
-        jumlah_P_1_sampai_7_hari: val(item.jumlah1Sampai7HariP),
-        jumlah_L_8_sampai_28_hari: val(item.jumlah8Sampai28HariL),
-        jumlah_P_8_sampai_28_hari: val(item.jumlah8Sampai28HariP),
-        jumlah_L_29_hari_sampai_dibawah_3_bulan: val(
-          item.jumlah29HariSampaiDibawah3BulanL
-        ),
-        jumlah_P_29_hari_sampai_dibawah_3_bulan: val(
-          item.jumlah29HariSampaiDibawah3BulanP
-        ),
-        jumlah_L_3_bulan_sampai_dibawah_6_bulan: val(
-          item.jumlah3BulanSampaiDibawah6BulanL
-        ),
-        jumlah_P_3_bulan_sampai_dibawah_6_bulan: val(
-          item.jumlah3BulanSampaiDibawah6BulanP
-        ),
-        jumlah_L_6_bulan_sampai_11_bulan: val(item.jumlah6BulanSampai11BulanL),
-        jumlah_P_6_bulan_sampai_11_bulan: val(item.jumlah6BulanSampai11BulanP),
-        jumlah_L_1_sampai_4_tahun: val(item.jumlah1Sampai4TahunL),
-        jumlah_P_1_sampai_4_tahun: val(item.jumlah1Sampai4TahunP),
-        jumlah_L_5_sampai_9_tahun: val(item.jumlah5Sampai9TahunL),
-        jumlah_P_5_sampai_9_tahun: val(item.jumlah5Sampai9TahunP),
-        jumlah_L_10_sampai_14_tahun: val(item.jumlah10Sampai14TahunL),
-        jumlah_P_10_sampai_14_tahun: val(item.jumlah10Sampai14TahunP),
-        jumlah_L_15_sampai_19_tahun: val(item.jumlah15Sampai19TahunL),
-        jumlah_P_15_sampai_19_tahun: val(item.jumlah15Sampai19TahunP),
-        jumlah_L_20_sampai_24_tahun: val(item.jumlah20Sampai24TahunL),
-        jumlah_P_20_sampai_24_tahun: val(item.jumlah20Sampai24TahunP),
-        jumlah_L_25_sampai_29_tahun: val(item.jumlah25Sampai29TahunL),
-        jumlah_P_25_sampai_29_tahun: val(item.jumlah25Sampai29TahunP),
-        jumlah_L_30_sampai_34_tahun: val(item.jumlah30Sampai34TahunL),
-        jumlah_P_30_sampai_34_tahun: val(item.jumlah30Sampai34TahunP),
-        jumlah_L_35_sampai_39_tahun: val(item.jumlah35Sampai39TahunL),
-        jumlah_P_35_sampai_39_tahun: val(item.jumlah35Sampai39TahunP),
-        jumlah_L_40_sampai_44_tahun: val(item.jumlah40Sampai44TahunL),
-        jumlah_P_40_sampai_44_tahun: val(item.jumlah40Sampai44TahunP),
-        jumlah_L_45_sampai_49_tahun: val(item.jumlah45Sampai49TahunL),
-        jumlah_P_45_sampai_49_tahun: val(item.jumlah45Sampai49TahunP),
-        jumlah_L_50_sampai_54_tahun: val(item.jumlah50Sampai54TahunL),
-        jumlah_P_50_sampai_54_tahun: val(item.jumlah50Sampai54TahunP),
-        jumlah_L_55_sampai_59_tahun: val(item.jumlah55Sampai59TahunL),
-        jumlah_P_55_sampai_59_tahun: val(item.jumlah55Sampai59TahunP),
-        jumlah_L_60_sampai_64_tahun: val(item.jumlah60Sampai64TahunL),
-        jumlah_P_60_sampai_64_tahun: val(item.jumlah60Sampai64TahunP),
-        jumlah_L_65_sampai_69_tahun: val(item.jumlah65Sampai69TahunL),
-        jumlah_P_65_sampai_69_tahun: val(item.jumlah65Sampai69TahunP),
-        jumlah_L_70_sampai_74_tahun: val(item.jumlah70Sampai74TahunL),
-        jumlah_P_70_sampai_74_tahun: val(item.jumlah70Sampai74TahunP),
-        jumlah_L_75_sampai_79_tahun: val(item.jumlah75Sampai79TahunL),
-        jumlah_P_75_sampai_79_tahun: val(item.jumlah75Sampai79TahunP),
-        jumlah_L_80_sampai_84_tahun: val(item.jumlah80Sampai84TahunL),
-        jumlah_P_80_sampai_84_tahun: val(item.jumlah80Sampai84TahunP),
-        jumlah_L_diatas_85_tahun: val(item.jumlahDiatas85TahunL),
-        jumlah_P_diatas_85_tahun: val(item.jumlahDiatas85TahunP),
+        jumlah_L_dibawah_1_jam: val(item.jumlahKasusBaruPasienUmurKurangDari1JamL),
+        jumlah_P_dibawah_1_jam: val(item.jumlahKasusBaruPasienUmurKurangDari1JamP),
+        jumlah_L_1_sampai_23_jam: val(item.jumlahKasusBaruPasienUmur1JamSampai23JamL),
+        jumlah_P_1_sampai_23_jam: val(item.jumlahKasusBaruPasienUmur1JamSampai23JamP),
+        jumlah_L_1_sampai_7_hari: val(item.jumlahKasusBaruPasienUmur1HariSampai7HariL),
+        jumlah_P_1_sampai_7_hari: val(item.jumlahKasusBaruPasienUmur1HariSampai7HariP),
+        jumlah_L_8_sampai_28_hari: val(item.jumlahKasusBaruPasienUmur8HariSampai28HariL),
+        jumlah_P_8_sampai_28_hari: val(item.jumlahKasusBaruPasienUmur8HariSampai28HariP),
+        jumlah_L_29_hari_sampai_dibawah_3_bulan: val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL),
+        jumlah_P_29_hari_sampai_dibawah_3_bulan: val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP),
+        jumlah_L_3_bulan_sampai_dibawah_6_bulan: val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL),
+        jumlah_P_3_bulan_sampai_dibawah_6_bulan: val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP),
+        jumlah_L_6_bulan_sampai_11_bulan: val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL),
+        jumlah_P_6_bulan_sampai_11_bulan: val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP),
+        jumlah_L_1_sampai_4_tahun: val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL),
+        jumlah_P_1_sampai_4_tahun: val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP),
+        jumlah_L_5_sampai_9_tahun: val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL),
+        jumlah_P_5_sampai_9_tahun: val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP),
+        jumlah_L_10_sampai_14_tahun: val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL),
+        jumlah_P_10_sampai_14_tahun: val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP),
+        jumlah_L_15_sampai_19_tahun: val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL),
+        jumlah_P_15_sampai_19_tahun: val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP),
+        jumlah_L_20_sampai_24_tahun: val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL),
+        jumlah_P_20_sampai_24_tahun: val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP),
+        jumlah_L_25_sampai_29_tahun: val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL),
+        jumlah_P_25_sampai_29_tahun: val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP),
+        jumlah_L_30_sampai_34_tahun: val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL),
+        jumlah_P_30_sampai_34_tahun: val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP),
+        jumlah_L_35_sampai_39_tahun: val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL),
+        jumlah_P_35_sampai_39_tahun: val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP),
+        jumlah_L_40_sampai_44_tahun: val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL),
+        jumlah_P_40_sampai_44_tahun: val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP),
+        jumlah_L_45_sampai_49_tahun: val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL),
+        jumlah_P_45_sampai_49_tahun: val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP),
+        jumlah_L_50_sampai_54_tahun: val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL),
+        jumlah_P_50_sampai_54_tahun: val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP),
+        jumlah_L_55_sampai_59_tahun: val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL),
+        jumlah_P_55_sampai_59_tahun: val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP),
+        jumlah_L_60_sampai_64_tahun: val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL),
+        jumlah_P_60_sampai_64_tahun: val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP),
+        jumlah_L_65_sampai_69_tahun: val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL),
+        jumlah_P_65_sampai_69_tahun: val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP),
+        jumlah_L_70_sampai_74_tahun: val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL),
+        jumlah_P_70_sampai_74_tahun: val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP),
+        jumlah_L_75_sampai_79_tahun: val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL),
+        jumlah_P_75_sampai_79_tahun: val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP),
+        jumlah_L_80_sampai_84_tahun: val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL),
+        jumlah_P_80_sampai_84_tahun: val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP),
+        jumlah_L_diatas_85_tahun: val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL),
+        jumlah_P_diatas_85_tahun: val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP),
         jumlah_kasus_baru_L: totalL,
         jumlah_kasus_baru_P: totalP,
         total_kasus_baru: total,
-        jumlah_kunjungan_L: val(item.jumlahKunjunganL),
-        jumlah_kunjungan_P: val(item.jumlahKunjunganP),
-        total_jumlah_kunjungan: total,
+        jumlah_kunjungan_L: val(item.jumlahKunjunganPasienL),
+        jumlah_kunjungan_P: val(item.jumlahKunjunganPasienP),
+        total_jumlah_kunjungan: totalkunjungan,
       });
     });
 
@@ -2341,8 +2320,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
           transaction,
         });
       }
-      await transaction.rollback();
-      // await transaction.commit();
+      await transaction.commit();
       return res.status(200).send({
         status: true,
         message: "Data updated successfully",
@@ -2357,7 +2335,6 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       });
     }
   } catch (err) {
-    // console.log("zulkifli ", err);
     return res.status(400).send({
       status: false,
       message: "Failed to process update.",
