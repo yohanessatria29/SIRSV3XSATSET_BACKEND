@@ -312,6 +312,7 @@ import {
   insertdataRLLimaTitikSatuExternal,
   updateDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuExternal,
+  getDataRLLimaTitikSatuSatuSehatShowPaging,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -332,8 +333,16 @@ import { getRLLimatitikTiga } from "../controllers/RLLimaTitikTigaController.js"
 // Absensi
 
 import { insertValidasi } from "../controllers/ValidasiController.js";
-import { getApiRegistrations, getRegistrationDetail, insertApiRegistration, userVerifApiRegistration } from "../controllers/ApiRegistrationController.js";
-import { getApiKeyDevelopment, reviewRegistration } from "../controllers/ApiKeyDevelopmentController.js";
+import {
+  getApiRegistrations,
+  getRegistrationDetail,
+  insertApiRegistration,
+  userVerifApiRegistration,
+} from "../controllers/ApiRegistrationController.js";
+import {
+  getApiKeyDevelopment,
+  reviewRegistration,
+} from "../controllers/ApiKeyDevelopmentController.js";
 import { insertApiProductionRequest } from "../controllers/ApiProductionRequestControlller.js";
 import { reviewProductionRequest } from "../controllers/ApiKeyProductionController.js";
 
@@ -450,11 +459,11 @@ router.post(
   insertDataRLTigaTitikEmpat
 );
 
-router.get("/apisirs6v2/rltigatitikempatsatusehat",
+router.get(
+  "/apisirs6v2/rltigatitikempatsatusehat",
   verifyToken,
   getDataRLTigaTitikEmpatSatuSehat
 );
-
 
 router.get(
   "/apisirs6v2/rltigatitikempat",
@@ -512,13 +521,11 @@ router.patch(
   updateDataRLTigaTitikLima
 );
 
-
 router.get(
   "/apisirs6v2/rltigatitiklimasatusehat",
   verifyToken,
   getDataRLTigaTitikLimaSatuSehat
 );
-
 
 // Jenis Kegiatan
 router.get(
@@ -1155,15 +1162,17 @@ router.get(
   getDataRLLimaTitikSatuSatuSehatShow
 );
 
+router.get(
+  "/apisirs6v2/rllimatitiksatusatusehatpage",
+  verifyToken,
+  getDataRLLimaTitikSatuSatuSehatShowPaging
+);
+
 // RL 5.3
 router.get("/apisirs6v2/rllimatitikdua", verifyToken, getRLLimaTitikDua);
 
 // RL 5.3
 router.get("/apisirs6v2/rllimatitiktiga", verifyToken, getRLLimatitikTiga);
-
-
-
-
 
 // REGISTRASI BRIDGING DAN API BRIDGING
 
@@ -1171,45 +1180,90 @@ router.get("/apisirs6v2/rllimatitiktiga", verifyToken, getRLLimatitikTiga);
 router.get("/apisirs6v2/apiregistration", verifyToken, getApiRegistrations);
 router.get("/apisirs6v2/apikeydevelopment", verifyToken, getApiKeyDevelopment);
 
-
 // User Registrasi API
-router.get("/apisirs6v2/apiregistrationdetail", verifyToken, getRegistrationDetail);
+router.get(
+  "/apisirs6v2/apiregistrationdetail",
+  verifyToken,
+  getRegistrationDetail
+);
 router.post("/apisirs6v2/apiregistration", verifyToken, insertApiRegistration);
-router.get("/apisirs6v2/apiregistration/verifikasiemail/:token", userVerifApiRegistration);
-router.post("/apisirs6v2/apiproductionrequest/:apiKeyDevelopmentId", verifyToken, insertApiProductionRequest);
-
+router.get(
+  "/apisirs6v2/apiregistration/verifikasiemail/:token",
+  userVerifApiRegistration
+);
+router.post(
+  "/apisirs6v2/apiproductionrequest/:apiKeyDevelopmentId",
+  verifyToken,
+  insertApiProductionRequest
+);
 
 //Admin Registration API\
-router.post("/apisirs6v2/apiregistration/review/:registrationId",  verifyToken,reviewRegistration);
-router.post("/apisirs6v2/apiproductionrequest/review/:productionRequestId",  verifyToken,reviewProductionRequest);
+router.post(
+  "/apisirs6v2/apiregistration/review/:registrationId",
+  verifyToken,
+  reviewRegistration
+);
+router.post(
+  "/apisirs6v2/apiproductionrequest/review/:productionRequestId",
+  verifyToken,
+  reviewProductionRequest
+);
 
-
-router.post("/apisirs6v2/external/login",  loginBridgingDev);
+router.post("/apisirs6v2/external/login", loginBridgingDev);
 
 // router.post("/apisirs6v2/external/login",  loginBridging);
 
-router.get("/apisirs6v2/external/icd/rawat_jalan/find", verifyTokenBridge, getIcdRajalbySearch);
-router.get("/apisirs6v2/external/icd/rawat_inap/find", verifyTokenBridge, getIcdRanapbySearch);
-
+router.get(
+  "/apisirs6v2/external/icd/rawat_jalan/find",
+  verifyTokenBridge,
+  getIcdRajalbySearch
+);
+router.get(
+  "/apisirs6v2/external/icd/rawat_inap/find",
+  verifyTokenBridge,
+  getIcdRanapbySearch
+);
 
 // RL 4.1
-router.get("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, getDataRLEmpatTitikSatuExternal);
+router.get(
+  "/apisirs6v2/external/rlempattitiksatu",
+  verifyTokenBridge,
+  getDataRLEmpatTitikSatuExternal
+);
 
 // RL 5.1
-router.get("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, getDataRLLimaTitikSatuExternal);
+router.get(
+  "/apisirs6v2/external/rllimatitiksatu",
+  verifyTokenBridge,
+  getDataRLLimaTitikSatuExternal
+);
 
 //4.1 Bridging Insert
-router.post("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, insertDataRLEmpatTitikSatuExternal);
+router.post(
+  "/apisirs6v2/external/rlempattitiksatu",
+  verifyTokenBridge,
+  insertDataRLEmpatTitikSatuExternal
+);
 
 //5.1 Bridging Insert
-router.post("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, insertdataRLLimaTitikSatuExternal);
+router.post(
+  "/apisirs6v2/external/rllimatitiksatu",
+  verifyTokenBridge,
+  insertdataRLLimaTitikSatuExternal
+);
 
 //4.1 Bridging Update
-router.patch("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, updateDataRLEmpatTitikSatuExternal);
+router.patch(
+  "/apisirs6v2/external/rlempattitiksatu",
+  verifyTokenBridge,
+  updateDataRLEmpatTitikSatuExternal
+);
 
 //5.1 Bridging Update
-router.patch("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, updateDataRLLimaTitikSatuExternal);
-
-
+router.patch(
+  "/apisirs6v2/external/rllimatitiksatu",
+  verifyTokenBridge,
+  updateDataRLLimaTitikSatuExternal
+);
 
 export default router;
