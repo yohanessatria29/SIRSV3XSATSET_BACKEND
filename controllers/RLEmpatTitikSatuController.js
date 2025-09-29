@@ -865,7 +865,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
           jumlahPasienHidupDanMatiUmur8HariSampai28HariL: Joi.number().min(0).max(99999999).required(),
           jumlahPasienHidupDanMatiUmur8HariSampai28HariP: Joi.number().min(0).max(99999999).required(),
           jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL: Joi.number().min(0).max(99999999).required(),
-          jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP: Joi.number().min(0).max(99999999).required(),
+          jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP: Joi.number().min(0).max(99999999).required(),
           jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL: Joi.number().min(0).max(99999999).required(),
           jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP: Joi.number().min(0).max(99999999).required(),
           jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL: Joi.number().min(0).max(99999999).required(),
@@ -1079,7 +1079,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         val(item.jumlahPasienHidupDanMatiUmur1JamSampai23JamP) +
         val(item.jumlahPasienHidupDanMatiUmur1HariSampai7HariP) +
         val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP) +
-        val(item.jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP) +
+        val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP) +
         val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP) +
         val(item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP) +
         val(item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP) +
@@ -1138,7 +1138,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         jmlh_pas_hidup_mati_umur_gen_8_28hr_l: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariL),
         jmlh_pas_hidup_mati_umur_gen_8_28hr_p: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP),
         jmlh_pas_hidup_mati_umur_gen_29hr_3bln_l: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL),
-        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP),
+        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP),
         jmlh_pas_hidup_mati_umur_gen_3_6bln_l: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL),
         jmlh_pas_hidup_mati_umur_gen_3_6bln_p: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP),
         jmlh_pas_hidup_mati_umur_gen_6_11bln_l: val(item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL),
@@ -1340,7 +1340,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
     jumlahPasienHidupDanMatiUmur8HariSampai28HariL: Joi.number().default(0),
     jumlahPasienHidupDanMatiUmur8HariSampai28HariP: Joi.number().default(0),
     jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP: Joi.number().default(0),
+    jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP: Joi.number().default(0),
     jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL: Joi.number().default(0),
     jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP: Joi.number().default(0),
     jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL: Joi.number().default(0),
@@ -1545,7 +1545,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
         item.jumlahPasienHidupDanMatiUmur1JamSampai23JamP,
         item.jumlahPasienHidupDanMatiUmur1HariSampai7HariP,
         item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP,
-        item.jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP,
+        item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP,
         item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP,
         item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP,
         item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP,
@@ -1593,7 +1593,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
         jmlh_pas_hidup_mati_umur_gen_8_28hr_l: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariL),
         jmlh_pas_hidup_mati_umur_gen_8_28hr_p: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP),
         jmlh_pas_hidup_mati_umur_gen_29hr_3bln_l: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL),
-        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9hari3BulanP),
+        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP),
         jmlh_pas_hidup_mati_umur_gen_3_6bln_l: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL),
         jmlh_pas_hidup_mati_umur_gen_3_6bln_p: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP),
         jmlh_pas_hidup_mati_umur_gen_6_11bln_l: val(item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL),
