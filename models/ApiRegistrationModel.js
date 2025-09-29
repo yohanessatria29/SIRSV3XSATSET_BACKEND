@@ -1,7 +1,6 @@
 import { DataTypes, QueryTypes } from "sequelize";
 import { databaseSIRS } from "../config/Database.js";
 import { sendEmail } from "../middleware/SmtpMail.js";
-import { apiKeyDevelopment } from "./ApiKeyDevelopmentModel.js";
 import { emailVerificationToken } from "./EmailVerificationTokenModel.js";
 
 export const apiRegistration = databaseSIRS.define(
@@ -29,10 +28,10 @@ export const apiRegistration = databaseSIRS.define(
       type: DataTypes.STRING,
     },
     status_verifikasi: {
-      type: DataTypes.ENUM('pending','verified','expired'),
+      type: DataTypes.ENUM("pending", "verified", "expired"),
     },
     status_pendaftaran: {
-      type: DataTypes.ENUM('pending','approved','rejected'),
+      type: DataTypes.ENUM("pending", "approved", "rejected"),
     },
     catatan: {
       type: DataTypes.TEXT,
@@ -59,7 +58,6 @@ export const apiRegistration = databaseSIRS.define(
 apiRegistration.hasMany(emailVerificationToken, {
   foreignKey: "registration_id",
 });
-
 
 // apiRegistration.hasOne(apiKeyDevelopment, {
 //   foreignKey: "registration_id",
@@ -88,81 +86,176 @@ export const insert= async(data, callback) => {
 
   // console.log("anbjat ",data)
 
-  try{
+  try {
+    const sqlInsertUser = `INSERT INTO api_registration (${columnsRegistration.join(
+      ", "
+    )}) VALUES (${placeholdersRegistration})`;
 
-      const sqlInsertUser = `INSERT INTO api_registration (${columnsRegistration.join(', ')}) VALUES (${placeholdersRegistration})`
-      
-      const insertDataRegistration = await databaseSIRS.query(sqlInsertUser, {
-          type: QueryTypes.INSERT,
-          replacements: valuesRegistration,
-          transaction: transaction
-      })
+    const insertDataRegistration = await databaseSIRS.query(sqlInsertUser, {
+      type: QueryTypes.INSERT,
+      replacements: valuesRegistration,
+      transaction: transaction,
+    });
 
-      valuesEmailVerifToken = [insertDataRegistration[0], ...valuesEmailVerifToken]
+    valuesEmailVerifToken = [
+      insertDataRegistration[0],
+      ...valuesEmailVerifToken,
+    ];
 
-          const sqlInsertEmailVerifToken = `INSERT INTO email_verification_token (${columnsEmailVerifToken.join(', ')}) VALUES (${placeholdersEmailVerifToken})`
+    const sqlInsertEmailVerifToken = `INSERT INTO email_verification_token (${columnsEmailVerifToken.join(
+      ", "
+    )}) VALUES (${placeholdersEmailVerifToken})`;
 
-          const insertEmailVerifToken = await databaseSIRS.query(sqlInsertEmailVerifToken, {
-              type: QueryTypes.INSERT,
-              replacements:valuesEmailVerifToken,
-              transaction: transaction
-          })
-      const sendEmailResult = await sendEmail(data.emailDetail)
-      // console.log('Email sent successfully:', sendEmailResult)
+    const insertEmailVerifToken = await databaseSIRS.query(
+      sqlInsertEmailVerifToken,
+      {
+        type: QueryTypes.INSERT,
+        replacements: valuesEmailVerifToken,
+        transaction: transaction,
+      }
+    );
+    const sendEmailResult = await sendEmail(data.emailDetail);
+    // console.log('Email sent successfully:', sendEmailResult)
 
-      await transaction.commit()
-      console.log('Transaction committed successfully.');
-      callback(null, insertDataRegistration[0])
+    await transaction.commit();
+    console.log("Transaction committed successfully.");
+    callback(null, insertDataRegistration[0]);
   } catch (error) {
-      // console.log("apa ",error)
-      await transaction.rollback()
-      callback(error, null)
+    // console.log("apa ",error)
+    await transaction.rollback();
+    callback(error, null);
   }
-}
+};
 
-export const review= async(data, callback) => {
+export const review = async (data, callback) => {
+  const columnsRegistration = Object.keys(data.registration);
+  const placeholdersRegistration = columnsRegistration
+    .map(() => "?")
+    .join(", ");
+  const valuesRegistration = Object.values(data.registration);
 
-
-  const columnsRegistration = Object.keys(data.registration);                   
-  const placeholdersRegistration = columnsRegistration.map(() => '?').join(', ');     
-  const valuesRegistration = Object.values(data.registration); 
-  
-  const columnsEmailVerifToken = ['registration_id', ...Object.keys(data.emailVerifToken)];
-  const placeholdersEmailVerifToken = columnsEmailVerifToken.map(() => '?').join(', ');
-  let valuesEmailVerifToken = Object.values(data.emailVerifToken);    
-  const transaction = await databaseSIRS.transaction()
+  const columnsEmailVerifToken = [
+    "registration_id",
+    ...Object.keys(data.emailVerifToken),
+  ];
+  const placeholdersEmailVerifToken = columnsEmailVerifToken
+    .map(() => "?")
+    .join(", ");
+  let valuesEmailVerifToken = Object.values(data.emailVerifToken);
+  const transaction = await databaseSIRS.transaction();
 
   // console.log("anbjat ",data)
 
-  try{
+  try {
+    const sqlInsertUser = `INSERT INTO api_registration (${columnsRegistration.join(
+      ", "
+    )}) VALUES (${placeholdersRegistration})`;
 
-      const sqlInsertUser = `INSERT INTO api_registration (${columnsRegistration.join(', ')}) VALUES (${placeholdersRegistration})`
-      
-      const insertDataRegistration = await databaseSIRS.query(sqlInsertUser, {
-          type: QueryTypes.INSERT,
-          replacements: valuesRegistration,
-          transaction: transaction
-      })
+    const insertDataRegistration = await databaseSIRS.query(sqlInsertUser, {
+      type: QueryTypes.INSERT,
+      replacements: valuesRegistration,
+      transaction: transaction,
+    });
 
-      valuesEmailVerifToken = [insertDataRegistration[0], ...valuesEmailVerifToken]
+    valuesEmailVerifToken = [
+      insertDataRegistration[0],
+      ...valuesEmailVerifToken,
+    ];
 
-          const sqlInsertEmailVerifToken = `INSERT INTO email_verification_token (${columnsEmailVerifToken.join(', ')}) VALUES (${placeholdersEmailVerifToken})`
+    const sqlInsertEmailVerifToken = `INSERT INTO email_verification_token (${columnsEmailVerifToken.join(
+      ", "
+    )}) VALUES (${placeholdersEmailVerifToken})`;
 
-          const insertEmailVerifToken = await databaseSIRS.query(sqlInsertEmailVerifToken, {
-              type: QueryTypes.INSERT,
-              replacements:valuesEmailVerifToken,
-              transaction: transaction
-          })
-      const sendEmailResult = await sendEmail(data.emailDetail)
-      console.log('Email sent successfully:', sendEmailResult)
+    const insertEmailVerifToken = await databaseSIRS.query(
+      sqlInsertEmailVerifToken,
+      {
+        type: QueryTypes.INSERT,
+        replacements: valuesEmailVerifToken,
+        transaction: transaction,
+      }
+    );
+    const sendEmailResult = await sendEmail(data.emailDetail);
+    console.log("Email sent successfully:", sendEmailResult);
 
-      await transaction.commit()
-      console.log('Transaction committed successfully.');
-      callback(null, insertDataRegistration[0])
+    await transaction.commit();
+    console.log("Transaction committed successfully.");
+    callback(null, insertDataRegistration[0]);
   } catch (error) {
-      // console.log("apa ",error)
-      await transaction.rollback()
-      callback(error, null)
+    // console.log("apa ",error)
+    await transaction.rollback();
+    callback(error, null);
+  }
+};
+
+export const get = async (data, callback) => {
+  const sqlSelect =
+    " SELECT " +
+    " users.nama, " +
+    " api_registration.rs_id, " +
+    " api_registration.id as registration_id, api_registration.nama_lengkap, " +
+    " api_registration.email_pendaftaran, api_registration.no_telp, api_registration.nama_aplikasi, " +
+    " api_registration.link_permohonan, api_registration.status_verifikasi, " +
+    " api_registration.status_pendaftaran, api_registration.tujuan_penggunaan, " +
+    " api_registration.catatan as catatan_registration, api_registration.created_at as waktu_daftar, " +
+    " email_verification_token.id as email_verification_token_id, " +
+    " api_key_development.id as api_key_development_id, " +
+    " api_key_development.api_key as api_key_dev, api_key_development.api_secret as api_secret_dev, " +
+    " api_production_request.id as api_production_request_id, " +
+    " api_production_request.link_bukti_development, api_production_request.`status`, " +
+    " api_production_request.alasan_penolakan as catatan_req_prod, api_production_request.created_at as waktu_daftar_prod, " +
+    " api_key_production.id as api_key_production_id, api_key_production.api_key, api_key_production.api_secret ";
+
+  const sqlFrom =
+    " FROM api_registration " +
+    " LEFT JOIN email_verification_token ON api_registration.id = email_verification_token.registration_id " +
+    " LEFT JOIN api_key_development ON api_registration.id = api_key_development.registration_id " +
+    " LEFT JOIN api_production_request ON api_key_development.id = api_production_request.api_key_development_id " +
+    " LEFT JOIN api_key_production ON api_production_request.id = api_key_production.id " +
+    " INNER JOIN users ON users.satker_id = api_registration.rs_id ";
+
+  const sqlOrder =
+    " ORDER BY api_registration.created_at DESC, api_production_request.created_at desc ";
+
+  const filter = [];
+  const sqlFilterValue = [];
+
+  // const provinsiId = req.query.provinsiId || null;
+  // const kabKotaId = req.query.kabKotaId || null;
+  // const jenis = req.query.jenis || null;
+  // const nama = req.query.nama || null;
+
+  // if (provinsiId != null) {
+  //   filter.push("data_klinik.id_prov = ?");
+  //   sqlFilterValue.push(provinsiId);
+  // }
+
+  // if (kabKotaId != null) {
+  //   filter.push("data_klinik.id_kota = ?");
+  //   sqlFilterValue.push(kabKotaId);
+  // }
+
+  // if (jenis != null) {
+  //   filter.push("data_klinik.jenis_klinik = ?");
+  //   sqlFilterValue.push(jenis);
+  // }
+
+  // if (nama != null) {
+  //   filter.push("data_klinik.nama_klinik like ?");
+  //   sqlFilterValue.push("%".concat(nama).concat("%"));
+  // }
+
+  let sqlFilter = "";
+
+  if (filter.length == 0) {
+    sqlFilter = "";
+  } else {
+    filter.forEach((value, index) => {
+      if (index == 0) {
+        sqlFilter = sqlWhere.concat(value);
+      } else if (index > 0) {
+        sqlFilter = sqlFilter.concat(" and ").concat(value);
+      }
+    });
   }
 }
 
@@ -245,21 +338,22 @@ export const get = async(data, callback) => {
     const sql = sqlSelect
     .concat(sqlFrom)
     // .concat(sqlFilter)
-    .concat(sqlOrder)
+    .concat(sqlOrder);
 
-    databaseSIRS.query(sql, {
-          type: QueryTypes.SELECT,
-          replacements: sqlFilterValue,
-        }).then(
-              (res) => {
-                callback(null, res);
-              },
-              (error) => {
-                throw error;
-              }
-            )
-        .catch((error) => {
-          callback(error, null);
-        });
-
-}
+  databaseSIRS
+    .query(sql, {
+      type: QueryTypes.SELECT,
+      replacements: sqlFilterValue,
+    })
+    .then(
+      (res) => {
+        callback(null, res);
+      },
+      (error) => {
+        throw error;
+      }
+    )
+    .catch((error) => {
+      callback(error, null);
+    });
+};
