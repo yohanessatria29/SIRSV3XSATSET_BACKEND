@@ -297,7 +297,7 @@ export const insertApiRegistration = async (req, res) => {
       subject: "Email Verifikasi Pendaftaran Bridging SIRS 6 2025",
       namaUser: req.body.namaLengkap,
       // link: "https://sirs6.kemkes.go.id/v3/verifikasi/?token=" + genToken,
-      link: "http://localhost:3000/v3/konfirmasiemail/" + genToken,
+      link: "http://202.70.136.86/sirs/konfirmasiemail/" + genToken,
       template: "registrationBridgingSirs",
     }
   };

@@ -36,17 +36,19 @@ apiRegistration.hasOne(apiKeyDevelopment, {
   foreignKey: "registration_id",
 });
 
-apiKeyDevelopment.hasMany(apiProductionRequest, {
-  foreignKey: "api_key_development_id",
-});
-
 apiKeyDevelopment.belongsTo(apiRegistration, {
   foreignKey: "registration_id",
 });
 
+apiKeyDevelopment.hasMany(apiProductionRequest, {
+  foreignKey: "api_key_development_id",
+});
+
+
 emailVerificationToken.belongsTo(apiRegistration, {
   foreignKey: "registration_id",
 });
+
 
 // apiKeyDevelopment.belongsTo(apiRegistration, {
 //   foreignKey: "registration_id",

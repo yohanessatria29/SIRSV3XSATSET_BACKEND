@@ -55,6 +55,36 @@ rlTigaTitikEmpatDetail.belongsTo(rlTigaTitikEmpatHeader, {
 jenisPengunjung.hasMany(rlTigaTitikEmpatDetail, {
     foreignKey:'id'
 })
+
 rlTigaTitikEmpatDetail.belongsTo(jenisPengunjung, {
-    foreignKey:'jenis_pengunjung_id'
+        foreignKey:'jenis_pengunjung_id'
 })
+
+// Model untuk menyimpan data RL 3.4 Satusehat
+export const RLTigaTitikEmpatSatusehat = databaseSIRS.define('rl_tiga_titik_empat_satusehat', {
+    month: {
+        type: DataTypes.STRING(7),
+        allowNull: false,
+    },
+    organization_id: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+    },
+    new_visitors: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    returning_visitors: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    total_visitors: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+}, {
+    tableName: 'rl_tiga_titik_empat_satusehat',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false,
+});

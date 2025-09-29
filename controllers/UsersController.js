@@ -14,6 +14,8 @@ import jsonWebToken from "jsonwebtoken";
 import Joi from "joi";
 import passwordValidator from "password-validator";
 import { Sequelize } from "sequelize";
+import { apiKeyDevelopment } from "../models/ApiKeyDevelopmentModel.js";
+import { apiRegistration } from "../models/ApiRegistrationModel.js";
 const Op = Sequelize.Op;
 const SSO_BASE_URL = process.env.SSO_BASE_URL;
 
@@ -977,7 +979,7 @@ apiKeyDevelopment
       if (!results) {
         res.status(404).send({
           status: false,
-          message: "user not found1",
+          message: "key not found",
         });
         return;
       }
@@ -1006,12 +1008,13 @@ apiKeyDevelopment
         if(!findUserResults){
           res.status(404).send({
             status: false,
-            message: "user not found2",
+            message: "user not found",
           });
           return;
         }
         
         const payloadObject = {
+          userId: findUserResults.dataValues.id,
           nama: findUserResults.dataValues.nama,
           email: findUserResults.dataValues.email,
           satKerId: findUserResults.dataValues.rs_id,
@@ -1125,7 +1128,7 @@ apiKeyDevelopment
       if (!results) {
         res.status(404).send({
           status: false,
-          message: "user not found1",
+          message: "key not found",
         });
         return;
       }
@@ -1154,12 +1157,13 @@ apiKeyDevelopment
         if(!findUserResults){
           res.status(404).send({
             status: false,
-            message: "user not found2",
+            message: "user not found",
           });
           return;
         }
         
         const payloadObject = {
+          userId: findUserResults.dataValues.id,
           nama: findUserResults.dataValues.nama,
           email: findUserResults.dataValues.email,
           satKerId: findUserResults.dataValues.rs_id,

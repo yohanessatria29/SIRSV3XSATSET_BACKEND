@@ -1,6 +1,12 @@
+// Endpoint untuk menampilkan data RL 3.4 Satusehat yang sudah tersimpan
+
+// ...existing code...
+import { RLTigaTitikEmpatSatusehat } from '../models/RLTigaTitikEmpatModel.js';
+import request from 'request';
 import { databaseSIRS } from '../config/Database.js'
-import { rlTigaTitikEmpatHeader, rlTigaTitikEmpatDetail, jenisPengunjung } from '../models/RLTigaTitikEmpatModel.js'
+import { rlTigaTitikEmpatHeader, rlTigaTitikEmpatDetail, jenisPengunjung } from '../models/RLTigaTitikEmpatModel.js';
 import Joi from 'joi'
+import joiDate from "@joi/date"
 
 export const getDataRLTigaTitikEmpat = (req, res) => {
     rlTigaTitikEmpatHeader.findAll({
@@ -32,6 +38,158 @@ export const getDataRLTigaTitikEmpat = (req, res) => {
         return
     })
 }
+
+
+
+export const getDataRLTigaTitikEmpatSatuSehat = (req, res) => {
+    const organization_id = req.query.organization_id || "ORG001";
+    const periode = req.query.periode;
+
+    if (!periode) {
+        return res.status(400).json({
+            status: false,
+            message: "Parameter 'periode' (format: YYYY-MM) wajib diisi."
+        });
+    }
+
+    const baseUrl =
+        (req.query.baseUrl && req.query.baseUrl.trim()) ||
+        process.env.SATUSEHAT_BASE_URL ||
+        "https://fhir-sirs-dev.dto.kemkes.go.id";
+
+    const apiKey =
+        (req.query.apiKey && req.query.apiKey.trim()) ||
+        process.env.SATUSEHAT_API_KEY;
+
+    if (!apiKey) {
+        return res.status(500).json({
+            status: false,
+            message:
+                "API key tidak tersedia. Silakan set process.env.SATUSEHAT_API_KEY atau kirim lewat query apiKey untuk testing.",
+        });
+    }
+
+        // Pastikan baseUrl tidak mengandung /v1/rlreport
+        let cleanBaseUrl = baseUrl.replace(/\/?v1\/rlreport\/?$/, '').replace(/\/$/, '');
+        const url = `${cleanBaseUrl}/v1/rlreport/rl34?month=${encodeURIComponent(
+            periode
+        )}&organization_id=${encodeURIComponent(organization_id)}`;
+
+    const options = {
+        method: 'GET',
+        url: url,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+        }
+    };
+
+        request(options, function (error, response) {
+            console.log('URL:', options.url);
+            console.log('Headers:', options.headers);
+            if (error) {
+                console.log('Request error:', error);
+                return res.status(500).json({
+                    status: false,
+                    message: "Gagal mengambil data dari Satusehat",
+                    detail: error.message
+                });
+            }
+            console.log('StatusCode:', response && response.statusCode);
+            console.log('Response body:', response && response.body);
+            try {
+                const data = JSON.parse(response.body);
+                if (response.statusCode === 404) {
+                    return res.status(404).json({
+                        status: false,
+                        message: data.message || "Not Found",
+                        detail: "Data tidak ditemukan dari API Satusehat"
+                    });
+                }
+                if (response.statusCode >= 400) {
+                    return res.status(response.statusCode).json({
+                        status: false,
+                        message: data.message || "Error dari Satusehat",
+                        detail: data.detail || null
+                    });
+                }
+                // Insert or update data RL 3.4 Satusehat
+                if (data && data.data && data.data.month) {
+                    const payload = {
+                        month: data.data.month,
+                        organization_id: data.data.organization_id,
+                        new_visitors: data.data.new_visitors,
+                        returning_visitors: data.data.returning_visitors,
+                        total_visitors: data.data.total_visitors,
+                    };
+                    console.log('Payload yang akan disimpan:', payload);
+                    RLTigaTitikEmpatSatusehat.findOne({
+                        where: {
+                            month: payload.month,
+                            organization_id: payload.organization_id
+                        }
+                    }).then((existing) => {
+                        if (existing) {
+                            // update
+                            existing.update({
+                                new_visitors: payload.new_visitors,
+                                returning_visitors: payload.returning_visitors,
+                                total_visitors: payload.total_visitors,
+                            }).then(() => {
+                                console.log('Berhasil update rl_tiga_titik_empat_satusehat');
+                            }).catch((err) => {
+                                console.log('Gagal update rl_tiga_titik_empat_satusehat:', err);
+                            });
+                        } else {
+                            // insert
+                            RLTigaTitikEmpatSatusehat.create(payload)
+                            .then(() => {
+                                console.log('Berhasil insert rl_tiga_titik_empat_satusehat');
+                            })
+                            .catch((err) => {
+                                console.log('Gagal insert rl_tiga_titik_empat_satusehat:', err);
+                            });
+                        }
+                    });
+                }
+                return res.status(200).json({
+                    status: true,
+                    message: "data found",
+                    data: data
+                });
+            } catch (e) {
+                console.log('Parse error:', e);
+                return res.status(500).json({
+                    status: false,
+                    message: "Gagal parsing response dari Satusehat",
+                    detail: e.message
+                });
+            }
+        });
+};
+
+// Endpoint untuk menampilkan data RL 3.4 Satusehat yang sudah tersimpan (Satusehat Local)
+export const getDataRLTigaTitikEmpatSatusehatLocal = async (req, res) => {
+    try {
+        const where = {};
+        if (req.query.month) where.month = req.query.month;
+        if (req.query.organization_id) where.organization_id = req.query.organization_id;
+        const data = await RLTigaTitikEmpatSatusehat.findAll({ where });
+        res.status(200).json({
+            status: true,
+            message: 'data found',
+            data
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: false,
+            message: 'Gagal mengambil data RL 3.4 Satusehat lokal',
+            detail: err.message
+        });
+    }
+};
+
+
 
 export const insertDataRLTigaTitikEmpat =  async (req, res) => {
     console.log(req.user)
@@ -163,3 +321,4 @@ export const getRLTigaTitikEmpatById = async(req,res)=>{
         return
     })
 }
+
