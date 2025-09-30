@@ -1266,4 +1266,12 @@ router.patch(
   updateDataRLLimaTitikSatuExternal
 );
 
+//4.1 Bridging Delete
+router.delete("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, deleteDataRLEmpatTitikSatuExternal);
+
+//5.1 Bridging Delete
+router.delete("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, deleteDataRLLimaTitikSatuExternal);
+
+
+
 export default router;
