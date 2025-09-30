@@ -272,6 +272,7 @@ import {
 // RL 4.1
 import {
   deleteDataRLEmpatTitikSatu,
+  deleteDataRLEmpatTitikSatuExternal,
   getDataRLEmpatTitikSatu,
   getDataRLEmpatTitikSatuById,
   getDataRLEmpatTitikSatuExternal,
@@ -313,6 +314,7 @@ import {
   updateDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuSatuSehatShowPaging,
+  deleteDataRLLimaTitikSatuExternal,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
