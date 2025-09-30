@@ -939,8 +939,8 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
 
 
   if (
-    req.body.periodeTahun > currentYear ||
-    (req.body.periodeTahun === currentYear && req.body.periodeBulan >= currentMonth)
+    parseInt(req.body.periodeTahun) > parseInt(currentYear) ||
+    (parseInt(req.body.periodeTahun) === parseInt(currentYear) && parseInt(req.body.periodeBulan) >= parseInt(currentMonth))
   ) {
     return res.status(400).send({
       status: false,
@@ -980,7 +980,7 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
       where: {
         [Op.and]: [
           { icd_code: { [Op.in]: ids } },
-          { status_rawat_inap: 1 },
+          { status_rawat_inap: 1 },{ is_active: 1 }
         ],
       },
       attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
@@ -1470,7 +1470,7 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
       where: {
         [Op.and]: [
           { id: { [Op.in]: icds } },
-          { status_rawat_inap: 1 },
+          { status_rawat_inap: 1 },{ is_active: 1 }
         ],
       },
       attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
@@ -1711,7 +1711,91 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
 };
 
 
+export const deleteDataRLEmpatTitikSatuExternal = async (req, res) => {
+   const schema = Joi.object({
+    dataId: Joi.array()
+      .items(
+        Joi.Number().integer().required()
+      )
+      .required(),
+  });
 
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    res.status(404).send({
+      status: false,
+      message: error.details[0].message,
+    });
+    return;
+  }
+   const idsToDelete = req.body.dataId.map((v) => Number(v));
+  let transaction;
+   try {
+    transaction = await databaseSIRS.transaction();
+
+    const rows = await rlEmpatTitikSatuDetail.findAll({
+      where: { id: { [Op.in]: idsToDelete } },
+      attributes: ['id', 'rs_id'],
+      raw: true,
+      transaction,
+    });
+
+    const foundIds = rows.map(r => Number(r.id));
+    const missingIds = idsToDelete.filter(id => !foundIds.includes(id));
+
+    if (missingIds.length > 0) {
+      await transaction.rollback();
+      return res.status(404).send({
+        status: false,
+        message: "Data tidak ditemukan",
+        missingIds,
+      });
+    }
+
+    const notOwned = rows.filter(r => Number(r.rs_id) !== Number(req.user.satKerId));
+    if (notOwned.length > 0) {
+      await transaction.rollback();
+      return res.status(403).send({
+        status: false,
+        message: "Beberapa data bukan milik RS Anda",
+        details: notOwned.map(r => ({ id: r.id, rs_id: r.rs_id })),
+      });
+    }
+
+    const deletedCount = await rlEmpatTitikSatuDetail.destroy({
+      where: {
+        id: { [Op.in]: idsToDelete },
+        rs_id: req.user.satKerId,
+      },
+      transaction,
+    });
+
+    if (deletedCount > 0) {
+      await transaction.commit();
+      return res.status(200).send({
+        status: true,
+        message: "Data berhasil dihapus",
+        data: { deleted_rows: deletedCount, requested_ids: idsToDelete },
+      });
+    } else {
+      await transaction.rollback();
+      return res.status(500).send({
+        status: false,
+        message: "Gagal menghapus data.",
+      });
+    }
+  } catch (err) {
+    if (transaction) {
+      try { await transaction.rollback(); } catch (e) { /* ignore */ }
+    }
+    console.error("deleteManyRLEmpatTitikSatuExternal error:", err);
+    return res.status(500).send({
+      status: false,
+      message: "Terjadi kesalahan pada server saat memproses penghapusan.",
+      error: err?.message || err,
+    });
+  }
+};
 
 // export const getRLEmpatTitikDua = (req, res) => {
 //   const joi = Joi.extend(joiDate) 

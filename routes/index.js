@@ -272,6 +272,7 @@ import {
 // RL 4.1
 import {
   deleteDataRLEmpatTitikSatu,
+  deleteDataRLEmpatTitikSatuExternal,
   getDataRLEmpatTitikSatu,
   getDataRLEmpatTitikSatuById,
   getDataRLEmpatTitikSatuExternal,
@@ -313,6 +314,7 @@ import {
   updateDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuSatuSehatShowPaging,
+  deleteDataRLLimaTitikSatuExternal,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -1265,5 +1267,13 @@ router.patch(
   verifyTokenBridge,
   updateDataRLLimaTitikSatuExternal
 );
+
+//4.1 Bridging Delete
+router.delete("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, deleteDataRLEmpatTitikSatuExternal);
+
+//5.1 Bridging Delete
+router.delete("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, deleteDataRLLimaTitikSatuExternal);
+
+
 
 export default router;
