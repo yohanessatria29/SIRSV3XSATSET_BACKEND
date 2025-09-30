@@ -1189,27 +1189,27 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
       };
     });
 
-    const totalErrors = [];
-    dataDetail.forEach((d, i) => {
-      const no = i + 1;
-      if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-        totalErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
-      }
-      if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-        totalErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
-      }
-      if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-        totalErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
-      }
-    });
+    // const totalErrors = [];
+    // dataDetail.forEach((d, i) => {
+    //   const no = i + 1;
+    //   if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
+    //     totalErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
+    //   }
+    //   if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
+    //     totalErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
+    //   }
+    //   if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
+    //     totalErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
+    //   }
+    // });
 
-    if (totalErrors.length > 0) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi total gagal",
-        errors: totalErrors,
-      });
-    }
+    // if (totalErrors.length > 0) {
+    //   return res.status(400).send({
+    //     status: false,
+    //     message: "Validasi total gagal",
+    //     errors: totalErrors,
+    //   });
+    // }
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();

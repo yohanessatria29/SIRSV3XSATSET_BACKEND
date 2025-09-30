@@ -1750,10 +1750,10 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       
-      if (val(item.jumlahKunjunganPasienL) >= totalL) {
+      if (val(item.jumlahKunjunganPasienL) < totalL) {
         relErrors.push(`Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
-      if (val(item.jumlahKunjunganPasienP) >= totalP) {
+      if (val(item.jumlahKunjunganPasienP) < totalP) {
         relErrors.push(`Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
@@ -1828,33 +1828,33 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         user_id: req.user.userId,
       };
     });
-    const totalErrors = [];
-    dataDetail.forEach((d, i) => {
-      const no = i + 1;
-      if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-        totalErrors.push(
-          `Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`
-        );
-      }
-      if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-        totalErrors.push(
-          `Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`
-        );
-      }
-      if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-        totalErrors.push(
-          `Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`
-        );
-      }
-    });
+    // const totalErrors = [];
+    // dataDetail.forEach((d, i) => {
+    //   const no = i + 1;
+    //   if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
+    //     totalErrors.push(
+    //       `Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`
+    //     );
+    //   }
+    //   if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
+    //     totalErrors.push(
+    //       `Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`
+    //     );
+    //   }
+    //   if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
+    //     totalErrors.push(
+    //       `Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`
+    //     );
+    //   }
+    // });
 
-    if (totalErrors.length > 0) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi total gagal",
-        errors: totalErrors,
-      });
-    }
+    // if (totalErrors.length > 0) {
+    //   return res.status(400).send({
+    //     status: false,
+    //     message: "Validasi total gagal",
+    //     errors: totalErrors,
+    //   });
+    // }
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();
@@ -2225,10 +2225,10 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       if (total <= totalkunjungan) {
         relErrors.push(`Data ke-${no}: Jumlah Kasus Baru harus lebih dari Jumlah Kunjungan.`);
       }
-      if (val(item.jumlahKunjunganPasienL) >= totalL) {
+      if (val(item.jumlahKunjunganPasienL) < totalL) {
         relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
-      if (val(item.jumlahKunjunganPasienP) >= totalP) {
+      if (val(item.jumlahKunjunganPasienP) < totalP) {
         relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
