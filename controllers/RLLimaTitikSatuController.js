@@ -2222,7 +2222,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
 
       const total = totalL + totalP;
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
-      if (total <= totalkunjungan) {
+      if (totalkunjungan  < total ) {
         relErrors.push(`Data ke-${no}: Jumlah Kasus Baru harus lebih dari Jumlah Kunjungan.`);
       }
       if (val(item.jumlahKunjunganPasienL) < totalL) {
