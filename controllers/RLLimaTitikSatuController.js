@@ -1746,7 +1746,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const total = totalL + totalP;
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       const relErrors = [];
-      if (total <= totalkunjungan) {
+      if (totalkunjungan < total ) {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       
