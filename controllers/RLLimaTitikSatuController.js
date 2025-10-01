@@ -2138,7 +2138,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       const total = totalL + totalP;
       const totalkunjungan = val(value.jumlahKunjunganPasienL) + val(value.jumlahKunjunganPasienP);
 
-      if (total > totalkunjungan) {
+      if (total < totalkunjungan) {
               return res.status(400).send({
         status: false,
         message: "Validasi total gagal",
