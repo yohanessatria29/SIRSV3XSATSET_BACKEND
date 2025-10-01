@@ -1752,7 +1752,6 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       if (total < totalkunjungan) {
         relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
-      
       if (val(item.jumlahKunjunganPasienL) < totalL) {
         relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
