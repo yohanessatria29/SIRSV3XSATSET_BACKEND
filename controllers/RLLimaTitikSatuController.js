@@ -1386,35 +1386,20 @@ export const deleteDataRLLimaTitikSatu = async (req, res) => {
 };
 
 export const getDataRLLimaTitikSatuExternal = (req, res) => {
-  // let whereClause = {}
 
-  //   if(req.query.rsId != req.user.satKerId){
-  //     res.status(404).send({
-  //       status: false,
-  //       message: "Kode RS Tidak Sesuai",
-  //     });
-  //     return;
-  //   }
   const whereClause = {
     rs_id: req.user.satKerId,
     periode: req.query.periode,
-  };
+  }
 
   rlLimaTitikSatuDetail
     .findAll({
       include: {
         model: icd,
-        attributes: [
-          "id",
-          "icd_code",
-          "description_code",
-          "icd_code_group",
-          "description_code_group",
-        ],
+        attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group"],
       },
       attributes: [
-        "id",
-        "periode",
+        "id", "periode",
         "jumlah_L_dibawah_1_jam",
         "jumlah_P_dibawah_1_jam",
         "jumlah_L_1_sampai_23_jam",
@@ -1475,10 +1460,75 @@ export const getDataRLLimaTitikSatuExternal = (req, res) => {
       where: whereClause,
     })
     .then((results) => {
+      // Mapping response data
+      const modifiedResults = results.map(result => {
+        return {
+          id: result.id,
+          periode: result.periode,
+          jumlahKasusBaruPasienUmurKurangDari1JamL: result.jumlah_L_dibawah_1_jam,
+          jumlahKasusBaruPasienUmurKurangDari1JamP: result.jumlah_P_dibawah_1_jam,
+          jumlahKasusBaruPasienUmur1JamSampai23JamL: result.jumlah_L_1_sampai_23_jam,
+          jumlahKasusBaruPasienUmur1JamSampai23JamP: result.jumlah_P_1_sampai_23_jam,
+          jumlahKasusBaruPasienUmur1HariSampai7HariL: result.jumlah_L_1_sampai_7_hari,
+          jumlahKasusBaruPasienUmur1HariSampai7HariP: result.jumlah_P_1_sampai_7_hari,
+          jumlahKasusBaruPasienUmur8HariSampai28HariL: result.jumlah_L_8_sampai_28_hari,
+          jumlahKasusBaruPasienUmur8HariSampai28HariP: result.jumlah_P_8_sampai_28_hari,
+          jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL: result.jumlah_L_29_hari_sampai_dibawah_3_bulan,
+          jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP: result.jumlah_P_29_hari_sampai_dibawah_3_bulan,
+          jumlahKasusBaruPasienUmur3BulanSampai6BulanL: result.jumlah_L_3_bulan_sampai_dibawah_6_bulan,
+          jumlahKasusBaruPasienUmur3BulanSampai6BulanP: result.jumlah_P_3_bulan_sampai_dibawah_6_bulan,
+          jumlahKasusBaruPasienUmur6BulanSampai11BulanL: result.jumlah_L_6_bulan_sampai_11_bulan,
+          jumlahKasusBaruPasienUmur6BulanSampai11BulanP: result.jumlah_P_6_bulan_sampai_11_bulan,
+          jumlahKasusBaruPasienUmur1TahunSampai4TahunL: result.jumlah_L_1_sampai_4_tahun,
+          jumlahKasusBaruPasienUmur1TahunSampai4TahunP: result.jumlah_P_1_sampai_4_tahun,
+          jumlahKasusBaruPasienUmur5TahunSampai9TahunL: result.jumlah_L_5_sampai_9_tahun,
+          jumlahKasusBaruPasienUmur5TahunSampai9TahunP: result.jumlah_P_5_sampai_9_tahun,
+          jumlahKasusBaruPasienUmur10TahunSampai14TahunL: result.jumlah_L_10_sampai_14_tahun,
+          jumlahKasusBaruPasienUmur10TahunSampai14TahunP: result.jumlah_P_10_sampai_14_tahun,
+          jumlahKasusBaruPasienUmur15TahunSampai19TahunL: result.jumlah_L_15_sampai_19_tahun,
+          jumlahKasusBaruPasienUmur15TahunSampai19TahunP: result.jumlah_P_15_sampai_19_tahun,
+          jumlahKasusBaruPasienUmur20TahunSampai24TahunL: result.jumlah_L_20_sampai_24_tahun,
+          jumlahKasusBaruPasienUmur20TahunSampai24TahunP: result.jumlah_P_20_sampai_24_tahun,
+          jumlahKasusBaruPasienUmur25TahunSampai29TahunL: result.jumlah_L_25_sampai_29_tahun,
+          jumlahKasusBaruPasienUmur25TahunSampai29TahunP: result.jumlah_P_25_sampai_29_tahun,
+          jumlahKasusBaruPasienUmur30TahunSampai34TahunL: result.jumlah_L_30_sampai_34_tahun,
+          jumlahKasusBaruPasienUmur30TahunSampai34TahunP: result.jumlah_P_30_sampai_34_tahun,
+          jumlahKasusBaruPasienUmur35TahunSampai39TahunL: result.jumlah_L_35_sampai_39_tahun,
+          jumlahKasusBaruPasienUmur35TahunSampai39TahunP: result.jumlah_P_35_sampai_39_tahun,
+          jumlahKasusBaruPasienUmur40TahunSampai44TahunL: result.jumlah_L_40_sampai_44_tahun,
+          jumlahKasusBaruPasienUmur40TahunSampai44TahunP: result.jumlah_P_40_sampai_44_tahun,
+          jumlahKasusBaruPasienUmur45TahunSampai49TahunL: result.jumlah_L_45_sampai_49_tahun,
+          jumlahKasusBaruPasienUmur45TahunSampai49TahunP: result.jumlah_P_45_sampai_49_tahun,
+          jumlahKasusBaruPasienUmur50TahunSampai54TahunL: result.jumlah_L_50_sampai_54_tahun,
+          jumlahKasusBaruPasienUmur50TahunSampai54TahunP: result.jumlah_P_50_sampai_54_tahun,
+          jumlahKasusBaruPasienUmur55TahunSampai59TahunL: result.jumlah_L_55_sampai_59_tahun,
+          jumlahKasusBaruPasienUmur55TahunSampai59TahunP: result.jumlah_P_55_sampai_59_tahun,
+          jumlahKasusBaruPasienUmur60TahunSampai64TahunL: result.jumlah_L_60_sampai_64_tahun,
+          jumlahKasusBaruPasienUmur60TahunSampai64TahunP: result.jumlah_P_60_sampai_64_tahun,
+          jumlahKasusBaruPasienUmur65TahunSampai69TahunL: result.jumlah_L_65_sampai_69_tahun,
+          jumlahKasusBaruPasienUmur65TahunSampai69TahunP: result.jumlah_P_65_sampai_69_tahun,
+          jumlahKasusBaruPasienUmur70TahunSampai74TahunL: result.jumlah_L_70_sampai_74_tahun,
+          jumlahKasusBaruPasienUmur70TahunSampai74TahunP: result.jumlah_P_70_sampai_74_tahun,
+          jumlahKasusBaruPasienUmur75TahunSampai79TahunL: result.jumlah_L_75_sampai_79_tahun,
+          jumlahKasusBaruPasienUmur75TahunSampai79TahunP: result.jumlah_P_75_sampai_79_tahun,
+          jumlahKasusBaruPasienUmur80TahunSampai84TahunL: result.jumlah_L_80_sampai_84_tahun,
+          jumlahKasusBaruPasienUmur80TahunSampai84TahunP: result.jumlah_P_80_sampai_84_tahun,
+          jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL: result.jumlah_L_diatas_85_tahun,
+          jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP: result.jumlah_P_diatas_85_tahun,
+          jumlahKasusBaruL: result.jumlah_kasus_baru_L,
+          jumlahKasusBaruP: result.jumlah_kasus_baru_P,
+          totalKasusBaru: result.total_kasus_baru,
+          jumlahKunjunganL: result.jumlah_kunjungan_L,
+          jumlahKunjunganP: result.jumlah_kunjungan_P,
+          totalJumlahKunjungan: result.total_jumlah_kunjungan,
+          icd_code: result.icd.icd_code
+        };
+      });
+
       res.status(200).send({
         status: true,
         message: "data found",
-        data: results,
+        data: modifiedResults,
       });
     })
     .catch((err) => {
