@@ -847,7 +847,6 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
     });
 };
 
-
 export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
   const schema = Joi.object({
     periodeBulan: Joi.number().greater(0).less(13).required(),
@@ -1045,8 +1044,11 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
 
     const periode = `${req.body.periodeTahun}-${String(req.body.periodeBulan).padStart(2, '0')}-01`;
 
-
-    const dataDetail = value.data.map((item) => {
+  const dataDetail = [];
+    const relErrorsAll = [];
+    for (const [index, item] of value.data.entries()) {
+      const idx = index+1
+      console.log("tes ",idx)
       const totalL =
         val(item.jumlahPasienHidupDanMatiUmurKurangDari1JamL) +
         val(item.jumlahPasienHidupDanMatiUmur1JamSampai23JamL) +
@@ -1107,24 +1109,22 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
       const totalKeluar = val(item.jumlahPasienKeluarMatiL) + val(item.jumlahPasienKeluarMatiP);
       const relErrors = [];
       if (totalKeluar > total) {
-        relErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
+        relErrors.push(`Data ke-${idx}: Jumlah Pasien Keluar Mati Lebih Dari Jumlah Pasien Hidup/Mati.`);
       }
       if (val(item.jumlahPasienKeluarMatiL) > totalL) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
+        relErrors.push(`Data ke-${idx}: Jumlah Pasien Keluar Mati Laki-Laki Lebih Dari Jumlah Pasien Keluar Hidup/Mati Laki-Laki.`);
       }
       if (val(item.jumlahPasienKeluarMatiP) > totalP) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
+        relErrors.push(`Data ke-${idx}: Jumlah Pasien Keluar Mati Perempuan Lebih Dari Jumlah Pasien Keluar Hidup/Mati Perempuan.`);
       }
 
 
       if (relErrors.length > 0) {
-        return res.status(400).send({
-          status: false,
-          message: relErrors,
-          // errors: relErrors,
-        });
+        relErrorsAll.push(...relErrors);
+        continue;
       }
-      return {
+
+      dataDetail.push ({
         rl_empat_titik_satu_id: null,
         rs_id: req.user.satKerId,
         periode: periode,
@@ -1186,30 +1186,15 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
         jmlh_pas_keluar_mati_gen_p: val(item.jumlahPasienKeluarMatiP),
         total_pas_keluar_mati: totalKeluar,
         user_id: req.user.userId,
-      };
-    });
-
-    // const totalErrors = [];
-    // dataDetail.forEach((d, i) => {
-    //   const no = i + 1;
-    //   if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-    //     totalErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
-    //   }
-    //   if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-    //     totalErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
-    //   }
-    //   if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-    //     totalErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
-    //   }
-    // });
-
-    // if (totalErrors.length > 0) {
-    //   return res.status(400).send({
-    //     status: false,
-    //     message: "Validasi total gagal",
-    //     errors: totalErrors,
-    //   });
-    // }
+      });
+    };
+        if (relErrorsAll.length > 0) {
+      return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: relErrorsAll,
+      });
+    }
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();
@@ -1292,8 +1277,8 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
           "total_pas_keluar_mati"
         ],
       });
-      await transaction.commit();
-      // await transaction.rollback();
+      // await transaction.commit();
+      await transaction.rollback();
       res.status(201).send({
         status: true,
         message: "data created",
@@ -1322,387 +1307,310 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
     console.log(err)
     return res.status(400).send({
       status: false,
-      message: "Gagal Input Data 2.",
+      message: "Gagal Input Data Harap Hubungi Admin.",
     });
   }
 };
 
-
 export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
-  const itemSchema = Joi.object({
-    id: Joi.number().integer().required(),
-    jumlahPasienHidupDanMatiUmurKurangDari1JamL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmurKurangDari1JamP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1JamSampai23JamL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1JamSampai23JamP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1HariSampai7HariL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1HariSampai7HariP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur8HariSampai28HariL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur8HariSampai28HariP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL: Joi.number().default(0),
-    jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP: Joi.number().default(0),
-    jumlahPasienKeluarMatiL: Joi.number().default(0),
-    jumlahPasienKeluarMatiP: Joi.number().default(0),
-  });
+  
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).send({
+      status: false,
+      message: "Parameter id tidak valid",
+    });
+  }
 
-  const schema = Joi.object({
-    data: Joi.array()
-      .items(itemSchema)
-      .unique((a, b) => Number(a.id) === Number(b.id))
-      .max(100)
-      .required(),
-  });
+  
+  const schemaBody = Joi.object({
+    jumlahPasienHidupDanMatiUmurKurangDari1JamL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmurKurangDari1JamP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1JamSampai23JamL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1JamSampai23JamP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1HariSampai7HariL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1HariSampai7HariP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur8HariSampai28HariL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur8HariSampai28HariP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL: Joi.number().integer().min(0).default(0),
+    jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP: Joi.number().integer().min(0).default(0),
+    jumlahPasienKeluarMatiL: Joi.number().integer().min(0).default(0),
+    jumlahPasienKeluarMatiP: Joi.number().integer().min(0).default(0),
+  }).required();
 
-  const { error, value } = schema.validate(req.body, {
-    abortEarly: false,
-    convert: true,
-  });
-
+  const { error, value } = schemaBody.validate(req.body, { abortEarly: false, convert: true });
   if (error) {
     return res.status(400).send({
       status: false,
       message: "Validasi schema gagal",
-      details: error.details.map((d) => d.message),
+      details: error.details.map(d => d.message),
     });
   }
 
-  if ((value.data?.length || 0) > 100) {
-    return res.status(400).send({
-      status: false,
-      message: "Data Tidak Bisa Lebih Dari 100",
-    });
-  }
-
-  const val = (x) => Number(x ?? 0);
+  const val = x => Number(x ?? 0);
 
   try {
-    const idPos = new Map();
-    value.data.forEach((it, idx) => {
-      const id = Number(it.id);
-      const arr = idPos.get(id) || [];
-      arr.push(idx + 1);
-      idPos.set(id, arr);
-    });
-    const dupIds = [];
-    idPos.forEach((pos, id) => {
-      if (pos.length > 1) dupIds.push(`ID ${id} duplikat pada data ke-${pos.join(", ")}`);
-    });
-    if (dupIds.length) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi gagal (duplikat id).",
-        errors: dupIds,
-      });
-    }
-
-    const ids = Array.from(idPos.keys());
-    const existing = await rlEmpatTitikSatuDetail.findAll({
-      where: { id: ids, rs_id: req.user.satKerId },
+    
+    const existing = await rlEmpatTitikSatuDetail.findOne({
+      where: { id, rs_id: req.user.satKerId },
       attributes: ["id", "rs_id", "icd_id"],
       raw: true,
     });
 
-    const existingMap = new Map(existing.map((r) => [r.id, r, r.rs_id]));
-    value.data.forEach((item, idx) => {
-      const id = Number(item.id);
-      const existingItem = existingMap.get(id);
-      if (existingItem) {
-          item.icd_id = existingItem.icd_id;
-      }
-    });
-
-    const notFoundOrNotOwned = [];
-    ids.forEach((id) => {
-      if (!existingMap.has(id)) {
-        notFoundOrNotOwned.push(`Data dengan ${id} tidak ditemukan atau kepemilikan data tidak sesuai.`);
-      }
-    });
-    if (notFoundOrNotOwned.length > 0) {
+    if (!existing) {
       return res.status(404).send({
         status: false,
-        message: "Verifikasi kepemilikan gagal.",
-        errors: notFoundOrNotOwned,
+        message: "Data tidak ditemukan atau bukan milik RS Anda.",
       });
     }
 
-    let icds = existing.map(item => item.icd_id);
-    const masterIcd = await icd.findAll({
-      where: {
-        [Op.and]: [
-          { id: { [Op.in]: icds } },
-          { status_rawat_inap: 1 },{ is_active: 1 }
-        ],
-      },
-      attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group", "status_top_10", "status_rawat_inap", "status_rawat_jalan", "status_laki", "status_perempuan"],
+   
+    const master = await icd.findOne({
+      where: { id: existing.icd_id, status_rawat_inap: 1, is_active: 1 },
+      attributes: ["id", "icd_code", "status_laki", "status_perempuan"],
       raw: true,
     });
 
-    const masterMap = new Map(masterIcd.map(r => [r.id, r]));
-
-    let toUpdate = [];
-    const errorsIcd = [];
-
-    value.data.forEach((item, idx) => {
-
-      const no = idx + 1;
-      const cek = masterMap.get(item.icd_id);
-      const keys = Object.keys(item);
-      const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahPasienKeluarMatiL");
-      const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahPasienKeluarMatiP");
-
-      const { status_laki, status_perempuan } = cek;
-
-      if (Number(status_laki) === 0) {
-        console.log("laki ",status_laki)
-        const filledL = lKeys.filter(k => val(item[k]) > 0);
-        if (filledL.length > 0) {
-          errorsIcd.push(
-            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
-          );
-        }
-      }
-
-      // Validasi untuk perempuan
-      if (Number(status_perempuan) === 0) {
-        const filledP = pKeys.filter(k => val(item[k]) > 0);
-        if (filledP.length > 0) {
-          errorsIcd.push(
-            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
-          );
-        }
-      }
-
-      const totalL = [
-        item.jumlahPasienHidupDanMatiUmurKurangDari1JamL,
-        item.jumlahPasienHidupDanMatiUmur1JamSampai23JamL,
-        item.jumlahPasienHidupDanMatiUmur1HariSampai7HariL,
-        item.jumlahPasienHidupDanMatiUmur8HariSampai28HariL,
-        item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL,
-        item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL,
-        item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL,
-        item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL,
-        item.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL,
-        item.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL,
-        item.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL,
-        item.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL,
-        item.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL,
-        item.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL,
-        item.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL,
-        item.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL,
-        item.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL,
-        item.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL,
-        item.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL,
-        item.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL,
-        item.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL,
-        item.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL,
-        item.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL,
-        item.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL,
-        item.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL,
-      ].reduce((sum, x) => sum + val(x), 0);
-
-      const totalP = [
-        item.jumlahPasienHidupDanMatiUmurKurangDari1JamP,
-        item.jumlahPasienHidupDanMatiUmur1JamSampai23JamP,
-        item.jumlahPasienHidupDanMatiUmur1HariSampai7HariP,
-        item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP,
-        item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP,
-        item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP,
-        item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP,
-        item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP,
-        item.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP,
-        item.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP,
-        item.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP,
-        item.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP,
-        item.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP,
-        item.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP,
-        item.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP,
-        item.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP,
-        item.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP,
-        item.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP,
-        item.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP,
-        item.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP,
-        item.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP,
-        item.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP,
-        item.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP,
-        item.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP,
-        item.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP,
-      ].reduce((sum, x) => sum + val(x), 0);
-
-      const total = totalL + totalP;
-      const totalKeluar = val(item.jumlahPasienKeluarMatiL) + val(item.jumlahPasienKeluarMatiP);
-      const relErrors = [];
-
-      if (totalKeluar > total) {
-        relErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
-      }
-      if (val(item.jumlahPasienKeluarMatiL) > totalL) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
-      }
-      if (val(item.jumlahPasienKeluarMatiP) > totalP) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
-      }
-
-      toUpdate.push({
-        id: Number(item.id),
-        jmlh_pas_hidup_mati_umur_gen_0_1jam_l: val(item.jumlahPasienHidupDanMatiUmurKurangDari1JamL),
-        jmlh_pas_hidup_mati_umur_gen_0_1jam_p: val(item.jumlahPasienHidupDanMatiUmurKurangDari1JamP),
-        jmlh_pas_hidup_mati_umur_gen_1_23jam_l: val(item.jumlahPasienHidupDanMatiUmur1JamSampai23JamL),
-        jmlh_pas_hidup_mati_umur_gen_1_23jam_p: val(item.jumlahPasienHidupDanMatiUmur1JamSampai23JamP),
-        jmlh_pas_hidup_mati_umur_gen_1_7hr_l: val(item.jumlahPasienHidupDanMatiUmur1HariSampai7HariL),
-        jmlh_pas_hidup_mati_umur_gen_1_7hr_p: val(item.jumlahPasienHidupDanMatiUmur1HariSampai7HariP),
-        jmlh_pas_hidup_mati_umur_gen_8_28hr_l: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariL),
-        jmlh_pas_hidup_mati_umur_gen_8_28hr_p: val(item.jumlahPasienHidupDanMatiUmur8HariSampai28HariP),
-        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_l: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL),
-        jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(item.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP),
-        jmlh_pas_hidup_mati_umur_gen_3_6bln_l: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL),
-        jmlh_pas_hidup_mati_umur_gen_3_6bln_p: val(item.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP),
-        jmlh_pas_hidup_mati_umur_gen_6_11bln_l: val(item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL),
-        jmlh_pas_hidup_mati_umur_gen_6_11bln_p: val(item.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP),
-        jmlh_pas_hidup_mati_umur_gen_1_4th_l: val(item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL),
-        jmlh_pas_hidup_mati_umur_gen_1_4th_p: val(item.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP),
-        jmlh_pas_hidup_mati_umur_gen_5_9th_l: val(item.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL),
-        jmlh_pas_hidup_mati_umur_gen_5_9th_p: val(item.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP),
-        jmlh_pas_hidup_mati_umur_gen_10_14th_l: val(item.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL),
-        jmlh_pas_hidup_mati_umur_gen_10_14th_p: val(item.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP),
-        jmlh_pas_hidup_mati_umur_gen_15_19th_l: val(item.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL),
-        jmlh_pas_hidup_mati_umur_gen_15_19th_p: val(item.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP),
-        jmlh_pas_hidup_mati_umur_gen_20_24th_l: val(item.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL),
-        jmlh_pas_hidup_mati_umur_gen_20_24th_p: val(item.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP),
-        jmlh_pas_hidup_mati_umur_gen_25_29th_l: val(item.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL),
-        jmlh_pas_hidup_mati_umur_gen_25_29th_p: val(item.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP),
-        jmlh_pas_hidup_mati_umur_gen_30_34th_l: val(item.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL),
-        jmlh_pas_hidup_mati_umur_gen_30_34th_p: val(item.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP),
-        jmlh_pas_hidup_mati_umur_gen_35_39th_l: val(item.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL),
-        jmlh_pas_hidup_mati_umur_gen_35_39th_p: val(item.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP),
-        jmlh_pas_hidup_mati_umur_gen_40_44th_l: val(item.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL),
-        jmlh_pas_hidup_mati_umur_gen_40_44th_p: val(item.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP),
-        jmlh_pas_hidup_mati_umur_gen_45_49th_l: val(item.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL),
-        jmlh_pas_hidup_mati_umur_gen_45_49th_p: val(item.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP),
-        jmlh_pas_hidup_mati_umur_gen_50_54th_l: val(item.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL),
-        jmlh_pas_hidup_mati_umur_gen_50_54th_p: val(item.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP),
-        jmlh_pas_hidup_mati_umur_gen_55_59th_l: val(item.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL),
-        jmlh_pas_hidup_mati_umur_gen_55_59th_p: val(item.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP),
-        jmlh_pas_hidup_mati_umur_gen_60_64th_l: val(item.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL),
-        jmlh_pas_hidup_mati_umur_gen_60_64th_p: val(item.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP),
-        jmlh_pas_hidup_mati_umur_gen_65_69th_l: val(item.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL),
-        jmlh_pas_hidup_mati_umur_gen_65_69th_p: val(item.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP),
-        jmlh_pas_hidup_mati_umur_gen_70_74th_l: val(item.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL),
-        jmlh_pas_hidup_mati_umur_gen_70_74th_p: val(item.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP),
-        jmlh_pas_hidup_mati_umur_gen_75_79th_l: val(item.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL),
-        jmlh_pas_hidup_mati_umur_gen_75_79th_p: val(item.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP),
-        jmlh_pas_hidup_mati_umur_gen_80_84th_l: val(item.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL),
-        jmlh_pas_hidup_mati_umur_gen_80_84th_p: val(item.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP),
-        jmlh_pas_hidup_mati_umur_gen_lebih85th_l: val(item.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL),
-        jmlh_pas_hidup_mati_umur_gen_lebih85th_p: val(item.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP),
-
-        jmlh_pas_hidup_mati_gen_l: totalL,
-        jmlh_pas_hidup_mati_gen_p: totalP,
-        total_pas_hidup_mati: total,
-
-        jmlh_pas_keluar_mati_gen_l: val(item.jumlahPasienKeluarMatiL),
-        jmlh_pas_keluar_mati_gen_p: val(item.jumlahPasienKeluarMatiP),
-        total_pas_keluar_mati: totalKeluar,
-      });
-
-    });
-
-    if (errorsIcd.length) {
+    if (!master) {
       return res.status(400).send({
         status: false,
-        message: "Validasi ICD gagal",
-        errors: errorsIcd,
+        message: "ICD terkait tidak valid (bukan untuk rawat inap atau tidak aktif).",
       });
     }
 
-    // collect relErrors from above iterations if any (we used relErrors inside loop but didn't aggregate outside)
-    const relErrors = [];
-    toUpdate.forEach((d, i) => {
-      const no = i + 1;
-      if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-        relErrors.push(`Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`);
-      }
-      if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`);
-      }
-      if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-        relErrors.push(`Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`);
-      }
-    });
+    
+    const keys = Object.keys(value);
+    const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahPasienKeluarMatiL");
+    const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahPasienKeluarMatiP");
 
-    if (relErrors.length) {
+    if (Number(master.status_laki) === 0) {
+      const filledL = lKeys.filter(k => val(value[k]) > 0);
+      if (filledL.length > 0) {
+        return res.status(400).send({
+          status: false,
+          message: `Parameter untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena ICD khusus pasien Perempuan.`,
+          details: filledL,
+        });
+      }
+    }
+    if (Number(master.status_perempuan) === 0) {
+      const filledP = pKeys.filter(k => val(value[k]) > 0);
+      if (filledP.length > 0) {
+        return res.status(400).send({
+          status: false,
+          message: `Parameter untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena ICD khusus pasien Laki.`,
+          details: filledP,
+        });
+      }
+    }
+
+   
+    const totalL = [
+      value.jumlahPasienHidupDanMatiUmurKurangDari1JamL,
+      value.jumlahPasienHidupDanMatiUmur1JamSampai23JamL,
+      value.jumlahPasienHidupDanMatiUmur1HariSampai7HariL,
+      value.jumlahPasienHidupDanMatiUmur8HariSampai28HariL,
+      value.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL,
+      value.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL,
+      value.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL,
+      value.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL,
+      value.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL,
+      value.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL,
+      value.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL,
+      value.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL,
+      value.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL,
+      value.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL,
+      value.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL,
+      value.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL,
+      value.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL,
+      value.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL,
+      value.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL,
+      value.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL,
+      value.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL,
+      value.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL,
+      value.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL,
+      value.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL,
+      value.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL,
+    ].reduce((s, x) => s + val(x), 0);
+
+    const totalP = [
+      value.jumlahPasienHidupDanMatiUmurKurangDari1JamP,
+      value.jumlahPasienHidupDanMatiUmur1JamSampai23JamP,
+      value.jumlahPasienHidupDanMatiUmur1HariSampai7HariP,
+      value.jumlahPasienHidupDanMatiUmur8HariSampai28HariP,
+      value.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP,
+      value.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP,
+      value.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP,
+      value.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP,
+      value.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP,
+      value.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP,
+      value.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP,
+      value.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP,
+      value.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP,
+      value.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP,
+      value.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP,
+      value.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP,
+      value.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP,
+      value.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP,
+      value.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP,
+      value.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP,
+      value.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP,
+      value.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP,
+      value.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP,
+      value.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP,
+      value.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP,
+    ].reduce((s, x) => s + val(x), 0);
+
+    const total = totalL + totalP;
+    const totalKeluar = val(value.jumlahPasienKeluarMatiL) + val(value.jumlahPasienKeluarMatiP);
+
+   
+    if (totalKeluar > total) {
       return res.status(400).send({
         status: false,
         message: "Validasi total gagal",
-        errors: relErrors,
+        errors: ["Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati."],
+      });
+    }
+    if (val(value.jumlahPasienKeluarMatiL) > totalL) {
+      return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: ["Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki."],
+      });
+    }
+    if (val(value.jumlahPasienKeluarMatiP) > totalP) {
+      return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: ["Keluar Mati Perempuan > Hidup/Mati Perempuan."],
       });
     }
 
+
+    const updateObj = {
+      jmlh_pas_hidup_mati_umur_gen_0_1jam_l: val(value.jumlahPasienHidupDanMatiUmurKurangDari1JamL),
+      jmlh_pas_hidup_mati_umur_gen_0_1jam_p: val(value.jumlahPasienHidupDanMatiUmurKurangDari1JamP),
+      jmlh_pas_hidup_mati_umur_gen_1_23jam_l: val(value.jumlahPasienHidupDanMatiUmur1JamSampai23JamL),
+      jmlh_pas_hidup_mati_umur_gen_1_23jam_p: val(value.jumlahPasienHidupDanMatiUmur1JamSampai23JamP),
+      jmlh_pas_hidup_mati_umur_gen_1_7hr_l: val(value.jumlahPasienHidupDanMatiUmur1HariSampai7HariL),
+      jmlh_pas_hidup_mati_umur_gen_1_7hr_p: val(value.jumlahPasienHidupDanMatiUmur1HariSampai7HariP),
+      jmlh_pas_hidup_mati_umur_gen_8_28hr_l: val(value.jumlahPasienHidupDanMatiUmur8HariSampai28HariL),
+      jmlh_pas_hidup_mati_umur_gen_8_28hr_p: val(value.jumlahPasienHidupDanMatiUmur8HariSampai28HariP),
+      jmlh_pas_hidup_mati_umur_gen_29hr_3bln_l: val(value.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL),
+      jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p: val(value.jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP),
+      jmlh_pas_hidup_mati_umur_gen_3_6bln_l: val(value.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL),
+      jmlh_pas_hidup_mati_umur_gen_3_6bln_p: val(value.jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP),
+      jmlh_pas_hidup_mati_umur_gen_6_11bln_l: val(value.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL),
+      jmlh_pas_hidup_mati_umur_gen_6_11bln_p: val(value.jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP),
+      jmlh_pas_hidup_mati_umur_gen_1_4th_l: val(value.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunL),
+      jmlh_pas_hidup_mati_umur_gen_1_4th_p: val(value.jumlahPasienHidupDanMatiUmur1TahunSampai4TahunP),
+      jmlh_pas_hidup_mati_umur_gen_5_9th_l: val(value.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunL),
+      jmlh_pas_hidup_mati_umur_gen_5_9th_p: val(value.jumlahPasienHidupDanMatiUmur5TahunSampai9TahunP),
+      jmlh_pas_hidup_mati_umur_gen_10_14th_l: val(value.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL),
+      jmlh_pas_hidup_mati_umur_gen_10_14th_p: val(value.jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP),
+      jmlh_pas_hidup_mati_umur_gen_15_19th_l: val(value.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL),
+      jmlh_pas_hidup_mati_umur_gen_15_19th_p: val(value.jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP),
+      jmlh_pas_hidup_mati_umur_gen_20_24th_l: val(value.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL),
+      jmlh_pas_hidup_mati_umur_gen_20_24th_p: val(value.jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP),
+      jmlh_pas_hidup_mati_umur_gen_25_29th_l: val(value.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL),
+      jmlh_pas_hidup_mati_umur_gen_25_29th_p: val(value.jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP),
+      jmlh_pas_hidup_mati_umur_gen_30_34th_l: val(value.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL),
+      jmlh_pas_hidup_mati_umur_gen_30_34th_p: val(value.jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP),
+      jmlh_pas_hidup_mati_umur_gen_35_39th_l: val(value.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL),
+      jmlh_pas_hidup_mati_umur_gen_35_39th_p: val(value.jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP),
+      jmlh_pas_hidup_mati_umur_gen_40_44th_l: val(value.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL),
+      jmlh_pas_hidup_mati_umur_gen_40_44th_p: val(value.jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP),
+      jmlh_pas_hidup_mati_umur_gen_45_49th_l: val(value.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL),
+      jmlh_pas_hidup_mati_umur_gen_45_49th_p: val(value.jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP),
+      jmlh_pas_hidup_mati_umur_gen_50_54th_l: val(value.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL),
+      jmlh_pas_hidup_mati_umur_gen_50_54th_p: val(value.jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP),
+      jmlh_pas_hidup_mati_umur_gen_55_59th_l: val(value.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL),
+      jmlh_pas_hidup_mati_umur_gen_55_59th_p: val(value.jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP),
+      jmlh_pas_hidup_mati_umur_gen_60_64th_l: val(value.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL),
+      jmlh_pas_hidup_mati_umur_gen_60_64th_p: val(value.jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP),
+      jmlh_pas_hidup_mati_umur_gen_65_69th_l: val(value.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL),
+      jmlh_pas_hidup_mati_umur_gen_65_69th_p: val(value.jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP),
+      jmlh_pas_hidup_mati_umur_gen_70_74th_l: val(value.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL),
+      jmlh_pas_hidup_mati_umur_gen_70_74th_p: val(value.jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP),
+      jmlh_pas_hidup_mati_umur_gen_75_79th_l: val(value.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL),
+      jmlh_pas_hidup_mati_umur_gen_75_79th_p: val(value.jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP),
+      jmlh_pas_hidup_mati_umur_gen_80_84th_l: val(value.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL),
+      jmlh_pas_hidup_mati_umur_gen_80_84th_p: val(value.jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP),
+      jmlh_pas_hidup_mati_umur_gen_lebih85th_l: val(value.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL),
+      jmlh_pas_hidup_mati_umur_gen_lebih85th_p: val(value.jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP),
+
+      jmlh_pas_hidup_mati_gen_l: totalL,
+      jmlh_pas_hidup_mati_gen_p: totalP,
+      total_pas_hidup_mati: total,
+
+      jmlh_pas_keluar_mati_gen_l: val(value.jumlahPasienKeluarMatiL),
+      jmlh_pas_keluar_mati_gen_p: val(value.jumlahPasienKeluarMatiP),
+      total_pas_keluar_mati: totalKeluar,
+    };
+
+    
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();
-
-      for (const item of toUpdate) {
-        await rlEmpatTitikSatuDetail.update(item, {
-          where: { id: item.id },
-          transaction,
-        });
-      }
+      await rlEmpatTitikSatuDetail.update(updateObj, { where: { id }, transaction });
       await transaction.commit();
+
       return res.status(200).send({
         status: true,
         message: "Data updated successfully",
-        data: { updated: toUpdate.length },
+        data: { id },
       });
     } catch (err) {
-      console.log(err);
       if (transaction) await transaction.rollback();
+      console.log(err);
       return res.status(400).send({
         status: false,
         message: "Failed to update data.",
       });
     }
   } catch (err) {
-    // console.log("zulkifli ", err);
+    console.log(err);
     return res.status(400).send({
       status: false,
       message: "Failed to process update.",
@@ -1710,63 +1618,49 @@ export const updateDataRLEmpatTitikSatuExternal = async (req, res) => {
   }
 };
 
-
 export const deleteDataRLEmpatTitikSatuExternal = async (req, res) => {
-   const schema = Joi.object({
-    dataId: Joi.array()
-      .items(
-        Joi.Number().integer().required()
-      )
-      .required(),
-  });
 
-  const { error, value } = schema.validate(req.body);
-  if (error) {
-    res.status(404).send({
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).send({
       status: false,
-      message: error.details[0].message,
+      message: "Parameter id tidak valid",
     });
-    return;
   }
-   const idsToDelete = req.body.dataId.map((v) => Number(v));
+
   let transaction;
-   try {
+  try {
     transaction = await databaseSIRS.transaction();
 
-    const rows = await rlEmpatTitikSatuDetail.findAll({
-      where: { id: { [Op.in]: idsToDelete } },
-      attributes: ['id', 'rs_id'],
+    const row = await rlEmpatTitikSatuDetail.findOne({
+      where: { id },
+      attributes: ["id", "rs_id"],
       raw: true,
       transaction,
+      // lock: transaction.LOCK.UPDATE, 
     });
 
-    const foundIds = rows.map(r => Number(r.id));
-    const missingIds = idsToDelete.filter(id => !foundIds.includes(id));
-
-    if (missingIds.length > 0) {
+    if (!row) {
       await transaction.rollback();
       return res.status(404).send({
         status: false,
         message: "Data tidak ditemukan",
-        missingIds,
+        id,
       });
     }
 
-    const notOwned = rows.filter(r => Number(r.rs_id) !== Number(req.user.satKerId));
-    if (notOwned.length > 0) {
+    if (Number(row.rs_id) !== Number(req.user.satKerId)) {
       await transaction.rollback();
       return res.status(403).send({
         status: false,
-        message: "Beberapa data bukan milik RS Anda",
-        details: notOwned.map(r => ({ id: r.id, rs_id: r.rs_id })),
+        message: "Data bukan milik RS Anda",
+        id,
+        rs_id: row.rs_id,
       });
     }
 
     const deletedCount = await rlEmpatTitikSatuDetail.destroy({
-      where: {
-        id: { [Op.in]: idsToDelete },
-        rs_id: req.user.satKerId,
-      },
+      where: { id, rs_id: req.user.satKerId },
       transaction,
     });
 
@@ -1775,27 +1669,29 @@ export const deleteDataRLEmpatTitikSatuExternal = async (req, res) => {
       return res.status(200).send({
         status: true,
         message: "Data berhasil dihapus",
-        data: { deleted_rows: deletedCount, requested_ids: idsToDelete },
+        data: { deleted_rows: deletedCount, id },
       });
     } else {
       await transaction.rollback();
       return res.status(500).send({
         status: false,
         message: "Gagal menghapus data.",
+        id,
       });
     }
   } catch (err) {
     if (transaction) {
-      try { await transaction.rollback(); } catch (e) { /* ignore */ }
+      try { await transaction.rollback(); } catch (e) { console.log(err) }
     }
-    console.error("deleteManyRLEmpatTitikSatuExternal error:", err);
+    console.error("deleteDataRLEmpatTitikSatuExternal error:", err);
     return res.status(500).send({
       status: false,
-      message: "Terjadi kesalahan pada server saat memproses penghapusan.",
+      message: "Terjadi kesalahan saat menghapus data.",
       error: err?.message || err,
     });
   }
 };
+
 
 // export const getRLEmpatTitikDua = (req, res) => {
 //   const joi = Joi.extend(joiDate) 
