@@ -1277,8 +1277,8 @@ export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
           "total_pas_keluar_mati"
         ],
       });
-      // await transaction.commit();
-      await transaction.rollback();
+      await transaction.commit();
+      // await transaction.rollback();
       res.status(201).send({
         status: true,
         message: "data created",
