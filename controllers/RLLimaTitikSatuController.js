@@ -1749,7 +1749,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const total = totalL + totalP;
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       const relErrors = [];
-      if (total < totalkunjungan) {
+      if (total > totalkunjungan) {
         relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       if (val(item.jumlahKunjunganPasienL) < totalL) {
@@ -2137,7 +2137,7 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
       const total = totalL + totalP;
       const totalkunjungan = val(value.jumlahKunjunganPasienL) + val(value.jumlahKunjunganPasienP);
 
-      if (total < totalkunjungan) {
+      if (total > totalkunjungan) {
               return res.status(400).send({
         status: false,
         message: "Validasi total gagal",
