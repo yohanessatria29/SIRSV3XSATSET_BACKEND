@@ -1691,6 +1691,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const dataDetail = [];
     const relErrorsAll = [];
     for (const [index, item] of value.data.entries()) {
+      const idx = index+1
       const totalL =
         val(item.jumlahKasusBaruPasienUmurKurangDari1JamL) +
         val(item.jumlahKasusBaruPasienUmur1JamSampai23JamL) +
@@ -1749,14 +1750,14 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       const relErrors = [];
       if (total <= totalkunjungan) {
-        relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
+        relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       
       if (val(item.jumlahKunjunganPasienL) < totalL) {
-        relErrors.push(`Data Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
+        relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
       }
       if (val(item.jumlahKunjunganPasienP) < totalP) {
-        relErrors.push(`Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
+        relErrors.push(`Data ke-${idx}: Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
             if (relErrors.length > 0) {
