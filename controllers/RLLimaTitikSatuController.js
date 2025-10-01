@@ -1688,7 +1688,9 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       req.body.periodeBulan
     ).padStart(2, "0")}-01`;
 
-    const dataDetail = value.data.map((item) => {
+      const dataDetail = [];
+    const relErrorsAll = [];
+    for (const [index, item] of value.data.entries()) {
       const totalL =
         val(item.jumlahKasusBaruPasienUmurKurangDari1JamL) +
         val(item.jumlahKasusBaruPasienUmur1JamSampai23JamL) +
@@ -1746,7 +1748,7 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
       const total = totalL + totalP;
       const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
       const relErrors = [];
-      if (totalkunjungan < total ) {
+      if (total <= totalkunjungan) {
         relErrors.push(`Data Jumlah Kasus Baru Lebih Dari Jumlah Kunjungan.`);
       }
       
@@ -1757,14 +1759,11 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         relErrors.push(`Data Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
       }
 
-      if (relErrors.length > 0) {
-        return res.status(400).send({
-          status: false,
-          message: relErrors,
-          // errors: relErrors,
-        });
+            if (relErrors.length > 0) {
+        relErrorsAll.push(...relErrors);
+        continue;
       }
-      return {
+     dataDetail.push ({
         rl_lima_titik_satu_id: null,
         rs_id: req.user.satKerId,
         periode,
@@ -1826,35 +1825,15 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
         jumlah_kunjungan_P: item.jumlahKunjunganPasienP,
         total_jumlah_kunjungan: totalkunjungan,
         user_id: req.user.userId,
-      };
-    });
-    // const totalErrors = [];
-    // dataDetail.forEach((d, i) => {
-    //   const no = i + 1;
-    //   if (d.total_pas_keluar_mati > d.total_pas_hidup_mati) {
-    //     totalErrors.push(
-    //       `Data ke-${no}: Jumlah Pasien Keluar Mati > Jumlah Pasien Hidup/Mati.`
-    //     );
-    //   }
-    //   if (d.jmlh_pas_keluar_mati_gen_l > d.jmlh_pas_hidup_mati_gen_l) {
-    //     totalErrors.push(
-    //       `Data ke-${no}: Keluar Mati Laki-Laki > Hidup/Mati Laki-Laki.`
-    //     );
-    //   }
-    //   if (d.jmlh_pas_keluar_mati_gen_p > d.jmlh_pas_hidup_mati_gen_p) {
-    //     totalErrors.push(
-    //       `Data ke-${no}: Keluar Mati Perempuan > Hidup/Mati Perempuan.`
-    //     );
-    //   }
-    // });
-
-    // if (totalErrors.length > 0) {
-    //   return res.status(400).send({
-    //     status: false,
-    //     message: "Validasi total gagal",
-    //     errors: totalErrors,
-    //   });
-    // }
+      });
+    };
+    if (relErrorsAll.length > 0) {
+      return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: relErrorsAll,
+      });
+    }
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();
@@ -1967,8 +1946,17 @@ export const insertdataRLLimaTitikSatuExternal = async (req, res) => {
 };
 
 export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
-  const itemSchema = Joi.object({
-    id: Joi.number().required(),
+  
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).send({
+      status: false,
+      message: "Parameter id tidak valid",
+    });
+  }
+
+  
+  const schemaBody = Joi.object({
     jumlahKasusBaruPasienUmurKurangDari1JamL: Joi.number().min(0).required(),
     jumlahKasusBaruPasienUmurKurangDari1JamP: Joi.number().min(0).required(),
     jumlahKasusBaruPasienUmur1JamSampai23JamL: Joi.number().min(0).required(),
@@ -2021,319 +2009,238 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
     jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP: Joi.number().min(0).required(),
     jumlahKunjunganPasienL: Joi.number().min(0).required(),
     jumlahKunjunganPasienP: Joi.number().min(0).required(),
-  });
+  }).required();
 
-  const schema = Joi.object({
-    data: Joi.array()
-      .items(itemSchema)
-      .unique((a, b) => Number(a.id) === Number(b.id))
-      .max(100)
-      .required(),
-  });
-
-  const { error, value } = schema.validate(req.body, {
-    abortEarly: false,
-    convert: true,
-  });
-
+  const { error, value } = schemaBody.validate(req.body, { abortEarly: false, convert: true });
   if (error) {
     return res.status(400).send({
       status: false,
       message: "Validasi schema gagal",
-      details: error.details.map((d) => d.message),
+      details: error.details.map(d => d.message),
     });
   }
 
-  if ((value.data?.length || 0) > 100) {
-    return res.status(400).send({
-      status: false,
-      message: "Data Tidak Bisa Lebih Dari 100",
-    });
-  }
-
-  const val = (x) => Number(x ?? 0);
+  const val = x => Number(x ?? 0);
 
   try {
-    const idPos = new Map();
-    value.data.forEach((it, idx) => {
-      const id = Number(it.id);
-      const arr = idPos.get(id) || [];
-      arr.push(idx + 1);
-      idPos.set(id, arr);
-    });
-    const dupIds = [];
-    idPos.forEach((pos, id) => {
-      if (pos.length > 1)
-        dupIds.push(`ID ${id} duplikat pada data ke-${pos.join(", ")}`);
-    });
-    if (dupIds.length) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi gagal (duplikat id).",
-        errors: dupIds,
-      });
-    }
-
-    const ids = Array.from(idPos.keys());
-    const existing = await rlLimaTitikSatuDetail.findAll({
-      where: { id: ids, rs_id: req.user.satKerId },
+    
+    const existing = await rlLimaTitikSatuDetail.findOne({
+      where: { id, rs_id: req.user.satKerId },
       attributes: ["id", "rs_id", "icd_id"],
       raw: true,
     });
 
-    const existingMap = new Map(existing.map((r) => [r.id, r, r.rs_id]));
-    value.data.forEach((item, idx) => {
-      const id = Number(item.id);
-      const existingItem = existingMap.get(id);
-      if (existingItem) {
-        item.icd_id = existingItem.icd_id;
-      }
-    });
-
-    const notFoundOrNotOwned = [];
-    ids.forEach((id) => {
-      if (!existingMap.has(id)) {
-        notFoundOrNotOwned.push(
-          `Data dengan ${id} tidak ditemukan atau kepemilikan data tidak sesuai.`
-        );
-      }
-    });
-    if (notFoundOrNotOwned.length > 0) {
+    if (!existing) {
       return res.status(404).send({
         status: false,
-        message: "Verifikasi kepemilikan gagal.",
-        errors: notFoundOrNotOwned,
+        message: "Data tidak ditemukan atau bukan milik RS Anda.",
       });
     }
 
-    let icds = existing.map((item) => item.icd_id);
-    const masterIcd = await icd.findAll({
-      where: {
-        [Op.and]: [{ id: { [Op.in]: icds } }, { status_rawat_jalan: 1 },{ is_active: 1 }],
-      },
-      attributes: [
-        "id",
-        "icd_code",
-        "description_code",
-        "icd_code_group",
-        "description_code_group",
-        "status_top_10",
-        "status_rawat_inap",
-        "status_rawat_jalan",
-        "status_laki",
-        "status_perempuan",
-      ],
+   
+    const master = await icd.findOne({
+      where: { id: existing.icd_id, status_rawat_jalan: 1, is_active: 1 },
+      attributes: ["id", "icd_code", "status_laki", "status_perempuan"],
       raw: true,
     });
 
-    const masterMap = new Map(masterIcd.map((r) => [r.id, r]));
+    if (!master) {
+      return res.status(400).send({
+        status: false,
+        message: "ICD terkait tidak valid (bukan untuk rawat inap atau tidak aktif).",
+      });
+    }
 
-    let toUpdate = [];
-    const errorsIcd = [];
-    const relErrors = [];
+    
+    const keys = Object.keys(value);
+    const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahKunjunganPasienL");
+    const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahKunjunganPasienP");
 
-    value.data.forEach((item, idx) => {
-      const no = idx + 1;
-      const cek = masterMap.get(item.icd_id);
-      const keys = Object.keys(item);
-
-      const lKeys = keys.filter(k => k.endsWith("L")).filter(k => k !== "jumlahKunjunganPasienL");
-      const pKeys = keys.filter(k => k.endsWith("P")).filter(k => k !== "jumlahKunjunganPasienP");
-      const { status_laki, status_perempuan } = cek || {};
-
-      if (!cek) {
-        errorsIcd.push(`Data ke-${no}: ICD master tidak ditemukan untuk icd_id = ${item.icd_id}.`);
-        return;
+    if (Number(master.status_laki) === 0) {
+      const filledL = lKeys.filter(k => val(value[k]) > 0);
+      if (filledL.length > 0) {
+        return res.status(400).send({
+          status: false,
+          message: `Parameter untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena ICD khusus pasien Perempuan.`,
+          details: filledL,
+        });
       }
-
-      if (Number(status_laki) === 0) {
-        const filledL = lKeys.filter(k => val(item[k]) > 0);
-        if (filledL.length > 0) {
-          errorsIcd.push(
-            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin L (Laki) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Perempuan.`
-          );
-        }
+    }
+    if (Number(master.status_perempuan) === 0) {
+      const filledP = pKeys.filter(k => val(value[k]) > 0);
+      if (filledP.length > 0) {
+        return res.status(400).send({
+          status: false,
+          message: `Parameter untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena ICD khusus pasien Laki.`,
+          details: filledP,
+        });
       }
+    }
 
-      if (Number(status_perempuan) === 0) {
-        const filledP = pKeys.filter((k) => val(item[k]) > 0);
-        if (filledP.length > 0) {
-          errorsIcd.push(
-            `Data ke-${no} dengan ICD ID = ${item.icd_id} parameter Untuk Jenis Kelamin P (Perempuan) tidak boleh bernilai > 0 karena Kode penyakit tersebut khusus untuk pasien Laki.`
-          );
-        }
-      }
+   
+    const totalL = [
+              value.jumlahKasusBaruPasienUmurKurangDari1JamL,
+        value.jumlahKasusBaruPasienUmur1JamSampai23JamL,
+        value.jumlahKasusBaruPasienUmur1HariSampai7HariL,
+        value.jumlahKasusBaruPasienUmur8HariSampai28HariL,
+        value.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL,
+        value.jumlahKasusBaruPasienUmur3BulanSampai6BulanL,
+        value.jumlahKasusBaruPasienUmur6BulanSampai11BulanL,
+        value.jumlahKasusBaruPasienUmur1TahunSampai4TahunL,
+        value.jumlahKasusBaruPasienUmur5TahunSampai9TahunL,
+        value.jumlahKasusBaruPasienUmur10TahunSampai14TahunL,
+        value.jumlahKasusBaruPasienUmur15TahunSampai19TahunL,
+        value.jumlahKasusBaruPasienUmur20TahunSampai24TahunL,
+        value.jumlahKasusBaruPasienUmur25TahunSampai29TahunL,
+        value.jumlahKasusBaruPasienUmur30TahunSampai34TahunL,
+        value.jumlahKasusBaruPasienUmur35TahunSampai39TahunL,
+        value.jumlahKasusBaruPasienUmur40TahunSampai44TahunL,
+        value.jumlahKasusBaruPasienUmur45TahunSampai49TahunL,
+        value.jumlahKasusBaruPasienUmur50TahunSampai54TahunL,
+        value.jumlahKasusBaruPasienUmur55TahunSampai59TahunL,
+        value.jumlahKasusBaruPasienUmur60TahunSampai64TahunL,
+        value.jumlahKasusBaruPasienUmur65TahunSampai69TahunL,
+        value.jumlahKasusBaruPasienUmur70TahunSampai74TahunL,
+        value.jumlahKasusBaruPasienUmur75TahunSampai79TahunL,
+        value.jumlahKasusBaruPasienUmur80TahunSampai84TahunL,
+        value.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL,
+    ].reduce((s, x) => s + val(x), 0);
 
-      const totalL = [
-        item.jumlahKasusBaruPasienUmurKurangDari1JamL,
-        item.jumlahKasusBaruPasienUmur1JamSampai23JamL,
-        item.jumlahKasusBaruPasienUmur1HariSampai7HariL,
-        item.jumlahKasusBaruPasienUmur8HariSampai28HariL,
-        item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL,
-        item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL,
-        item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL,
-        item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL,
-        item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL,
-        item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL,
-        item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL,
-        item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL,
-        item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL,
-        item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL,
-        item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL,
-        item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL,
-        item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL,
-        item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL,
-        item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL,
-        item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL,
-        item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL,
-        item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL,
-        item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL,
-        item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL,
-        item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL,
-      ].reduce((sum, x) => sum + val(x), 0);
-
-      const totalP = [
-        item.jumlahKasusBaruPasienUmurKurangDari1JamP,
-        item.jumlahKasusBaruPasienUmur1JamSampai23JamP,
-        item.jumlahKasusBaruPasienUmur1HariSampai7HariP,
-        item.jumlahKasusBaruPasienUmur8HariSampai28HariP,
-        item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP,
-        item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP,
-        item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP,
-        item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP,
-        item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP,
-        item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP,
-        item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP,
-        item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP,
-        item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP,
-        item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP,
-        item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP,
-        item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP,
-        item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP,
-        item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP,
-        item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP,
-        item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP,
-        item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP,
-        item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP,
-        item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP,
-        item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP,
-        item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP,
-      ].reduce((sum, x) => sum + val(x), 0);
+    const totalP = [
+      value.jumlahKasusBaruPasienUmurKurangDari1JamP,
+        value.jumlahKasusBaruPasienUmur1JamSampai23JamP,
+        value.jumlahKasusBaruPasienUmur1HariSampai7HariP,
+        value.jumlahKasusBaruPasienUmur8HariSampai28HariP,
+        value.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP,
+        value.jumlahKasusBaruPasienUmur3BulanSampai6BulanP,
+        value.jumlahKasusBaruPasienUmur6BulanSampai11BulanP,
+        value.jumlahKasusBaruPasienUmur1TahunSampai4TahunP,
+        value.jumlahKasusBaruPasienUmur5TahunSampai9TahunP,
+        value.jumlahKasusBaruPasienUmur10TahunSampai14TahunP,
+        value.jumlahKasusBaruPasienUmur15TahunSampai19TahunP,
+        value.jumlahKasusBaruPasienUmur20TahunSampai24TahunP,
+        value.jumlahKasusBaruPasienUmur25TahunSampai29TahunP,
+        value.jumlahKasusBaruPasienUmur30TahunSampai34TahunP,
+        value.jumlahKasusBaruPasienUmur35TahunSampai39TahunP,
+        value.jumlahKasusBaruPasienUmur40TahunSampai44TahunP,
+        value.jumlahKasusBaruPasienUmur45TahunSampai49TahunP,
+        value.jumlahKasusBaruPasienUmur50TahunSampai54TahunP,
+        value.jumlahKasusBaruPasienUmur55TahunSampai59TahunP,
+        value.jumlahKasusBaruPasienUmur60TahunSampai64TahunP,
+        value.jumlahKasusBaruPasienUmur65TahunSampai69TahunP,
+        value.jumlahKasusBaruPasienUmur70TahunSampai74TahunP,
+        value.jumlahKasusBaruPasienUmur75TahunSampai79TahunP,
+        value.jumlahKasusBaruPasienUmur80TahunSampai84TahunP,
+        value.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP,
+    ].reduce((s, x) => s + val(x), 0);
 
       const total = totalL + totalP;
-      const totalkunjungan = val(item.jumlahKunjunganPasienL) + val(item.jumlahKunjunganPasienP);
-      if (totalkunjungan  < total ) {
-        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru harus lebih dari Jumlah Kunjungan.`);
+      const totalkunjungan = val(value.jumlahKunjunganPasienL) + val(value.jumlahKunjunganPasienP);
+
+      if (total > totalkunjungan) {
+              return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: ["Jumlah Kasus Baru tidak boleh lebih dari Jumlah Kunjungan."],
+      });
+     }
+      if (totalL > val(value.jumlahKunjunganPasienL)) {
+              return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: ["Jumlah Kasus Baru Laki-Laki tidak boleh lebih dari Jumlah Kunjungan Pasien Laki-Laki."],
+      });
       }
-      if (val(item.jumlahKunjunganPasienL) < totalL) {
-        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Laki-Laki Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Laki-Laki.`);
-      }
-      if (val(item.jumlahKunjunganPasienP) < totalP) {
-        relErrors.push(`Data ke-${no}: Jumlah Kasus Baru Perempuan Tidak Boleh Lebih Dari Jumlah Kunjungan Pasien Perempuan`);
+      if (totalP > val(item.jumlahKunjunganPasienP)) {
+              return res.status(400).send({
+        status: false,
+        message: "Validasi total gagal",
+        errors: ["Jumlah Kasus Baru Perempuan tidak boleh lebih dari Jumlah Kunjungan Pasien Perempuan."],
+      });
       }
 
-      toUpdate.push({
-        id: Number(item.id),
-        jumlah_L_dibawah_1_jam: val(item.jumlahKasusBaruPasienUmurKurangDari1JamL),
-        jumlah_P_dibawah_1_jam: val(item.jumlahKasusBaruPasienUmurKurangDari1JamP),
-        jumlah_L_1_sampai_23_jam: val(item.jumlahKasusBaruPasienUmur1JamSampai23JamL),
-        jumlah_P_1_sampai_23_jam: val(item.jumlahKasusBaruPasienUmur1JamSampai23JamP),
-        jumlah_L_1_sampai_7_hari: val(item.jumlahKasusBaruPasienUmur1HariSampai7HariL),
-        jumlah_P_1_sampai_7_hari: val(item.jumlahKasusBaruPasienUmur1HariSampai7HariP),
-        jumlah_L_8_sampai_28_hari: val(item.jumlahKasusBaruPasienUmur8HariSampai28HariL),
-        jumlah_P_8_sampai_28_hari: val(item.jumlahKasusBaruPasienUmur8HariSampai28HariP),
-        jumlah_L_29_hari_sampai_dibawah_3_bulan: val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL),
-        jumlah_P_29_hari_sampai_dibawah_3_bulan: val(item.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP),
-        jumlah_L_3_bulan_sampai_dibawah_6_bulan: val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanL),
-        jumlah_P_3_bulan_sampai_dibawah_6_bulan: val(item.jumlahKasusBaruPasienUmur3BulanSampai6BulanP),
-        jumlah_L_6_bulan_sampai_11_bulan: val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanL),
-        jumlah_P_6_bulan_sampai_11_bulan: val(item.jumlahKasusBaruPasienUmur6BulanSampai11BulanP),
-        jumlah_L_1_sampai_4_tahun: val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunL),
-        jumlah_P_1_sampai_4_tahun: val(item.jumlahKasusBaruPasienUmur1TahunSampai4TahunP),
-        jumlah_L_5_sampai_9_tahun: val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunL),
-        jumlah_P_5_sampai_9_tahun: val(item.jumlahKasusBaruPasienUmur5TahunSampai9TahunP),
-        jumlah_L_10_sampai_14_tahun: val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunL),
-        jumlah_P_10_sampai_14_tahun: val(item.jumlahKasusBaruPasienUmur10TahunSampai14TahunP),
-        jumlah_L_15_sampai_19_tahun: val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunL),
-        jumlah_P_15_sampai_19_tahun: val(item.jumlahKasusBaruPasienUmur15TahunSampai19TahunP),
-        jumlah_L_20_sampai_24_tahun: val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunL),
-        jumlah_P_20_sampai_24_tahun: val(item.jumlahKasusBaruPasienUmur20TahunSampai24TahunP),
-        jumlah_L_25_sampai_29_tahun: val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunL),
-        jumlah_P_25_sampai_29_tahun: val(item.jumlahKasusBaruPasienUmur25TahunSampai29TahunP),
-        jumlah_L_30_sampai_34_tahun: val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunL),
-        jumlah_P_30_sampai_34_tahun: val(item.jumlahKasusBaruPasienUmur30TahunSampai34TahunP),
-        jumlah_L_35_sampai_39_tahun: val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunL),
-        jumlah_P_35_sampai_39_tahun: val(item.jumlahKasusBaruPasienUmur35TahunSampai39TahunP),
-        jumlah_L_40_sampai_44_tahun: val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunL),
-        jumlah_P_40_sampai_44_tahun: val(item.jumlahKasusBaruPasienUmur40TahunSampai44TahunP),
-        jumlah_L_45_sampai_49_tahun: val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunL),
-        jumlah_P_45_sampai_49_tahun: val(item.jumlahKasusBaruPasienUmur45TahunSampai49TahunP),
-        jumlah_L_50_sampai_54_tahun: val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunL),
-        jumlah_P_50_sampai_54_tahun: val(item.jumlahKasusBaruPasienUmur50TahunSampai54TahunP),
-        jumlah_L_55_sampai_59_tahun: val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunL),
-        jumlah_P_55_sampai_59_tahun: val(item.jumlahKasusBaruPasienUmur55TahunSampai59TahunP),
-        jumlah_L_60_sampai_64_tahun: val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunL),
-        jumlah_P_60_sampai_64_tahun: val(item.jumlahKasusBaruPasienUmur60TahunSampai64TahunP),
-        jumlah_L_65_sampai_69_tahun: val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunL),
-        jumlah_P_65_sampai_69_tahun: val(item.jumlahKasusBaruPasienUmur65TahunSampai69TahunP),
-        jumlah_L_70_sampai_74_tahun: val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunL),
-        jumlah_P_70_sampai_74_tahun: val(item.jumlahKasusBaruPasienUmur70TahunSampai74TahunP),
-        jumlah_L_75_sampai_79_tahun: val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunL),
-        jumlah_P_75_sampai_79_tahun: val(item.jumlahKasusBaruPasienUmur75TahunSampai79TahunP),
-        jumlah_L_80_sampai_84_tahun: val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunL),
-        jumlah_P_80_sampai_84_tahun: val(item.jumlahKasusBaruPasienUmur80TahunSampai84TahunP),
-        jumlah_L_diatas_85_tahun: val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL),
-        jumlah_P_diatas_85_tahun: val(item.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP),
+
+    const updateObj = {
+      jumlah_L_dibawah_1_jam: val(value.jumlahKasusBaruPasienUmurKurangDari1JamL),
+        jumlah_P_dibawah_1_jam: val(value.jumlahKasusBaruPasienUmurKurangDari1JamP),
+        jumlah_L_1_sampai_23_jam: val(value.jumlahKasusBaruPasienUmur1JamSampai23JamL),
+        jumlah_P_1_sampai_23_jam: val(value.jumlahKasusBaruPasienUmur1JamSampai23JamP),
+        jumlah_L_1_sampai_7_hari: val(value.jumlahKasusBaruPasienUmur1HariSampai7HariL),
+        jumlah_P_1_sampai_7_hari: val(value.jumlahKasusBaruPasienUmur1HariSampai7HariP),
+        jumlah_L_8_sampai_28_hari: val(value.jumlahKasusBaruPasienUmur8HariSampai28HariL),
+        jumlah_P_8_sampai_28_hari: val(value.jumlahKasusBaruPasienUmur8HariSampai28HariP),
+        jumlah_L_29_hari_sampai_dibawah_3_bulan: val(value.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanL),
+        jumlah_P_29_hari_sampai_dibawah_3_bulan: val(value.jumlahKasusBaruPasienUmur2HariSampai9Hari3BulanP),
+        jumlah_L_3_bulan_sampai_dibawah_6_bulan: val(value.jumlahKasusBaruPasienUmur3BulanSampai6BulanL),
+        jumlah_P_3_bulan_sampai_dibawah_6_bulan: val(value.jumlahKasusBaruPasienUmur3BulanSampai6BulanP),
+        jumlah_L_6_bulan_sampai_11_bulan: val(value.jumlahKasusBaruPasienUmur6BulanSampai11BulanL),
+        jumlah_P_6_bulan_sampai_11_bulan: val(value.jumlahKasusBaruPasienUmur6BulanSampai11BulanP),
+        jumlah_L_1_sampai_4_tahun: val(value.jumlahKasusBaruPasienUmur1TahunSampai4TahunL),
+        jumlah_P_1_sampai_4_tahun: val(value.jumlahKasusBaruPasienUmur1TahunSampai4TahunP),
+        jumlah_L_5_sampai_9_tahun: val(value.jumlahKasusBaruPasienUmur5TahunSampai9TahunL),
+        jumlah_P_5_sampai_9_tahun: val(value.jumlahKasusBaruPasienUmur5TahunSampai9TahunP),
+        jumlah_L_10_sampai_14_tahun: val(value.jumlahKasusBaruPasienUmur10TahunSampai14TahunL),
+        jumlah_P_10_sampai_14_tahun: val(value.jumlahKasusBaruPasienUmur10TahunSampai14TahunP),
+        jumlah_L_15_sampai_19_tahun: val(value.jumlahKasusBaruPasienUmur15TahunSampai19TahunL),
+        jumlah_P_15_sampai_19_tahun: val(value.jumlahKasusBaruPasienUmur15TahunSampai19TahunP),
+        jumlah_L_20_sampai_24_tahun: val(value.jumlahKasusBaruPasienUmur20TahunSampai24TahunL),
+        jumlah_P_20_sampai_24_tahun: val(value.jumlahKasusBaruPasienUmur20TahunSampai24TahunP),
+        jumlah_L_25_sampai_29_tahun: val(value.jumlahKasusBaruPasienUmur25TahunSampai29TahunL),
+        jumlah_P_25_sampai_29_tahun: val(value.jumlahKasusBaruPasienUmur25TahunSampai29TahunP),
+        jumlah_L_30_sampai_34_tahun: val(value.jumlahKasusBaruPasienUmur30TahunSampai34TahunL),
+        jumlah_P_30_sampai_34_tahun: val(value.jumlahKasusBaruPasienUmur30TahunSampai34TahunP),
+        jumlah_L_35_sampai_39_tahun: val(value.jumlahKasusBaruPasienUmur35TahunSampai39TahunL),
+        jumlah_P_35_sampai_39_tahun: val(value.jumlahKasusBaruPasienUmur35TahunSampai39TahunP),
+        jumlah_L_40_sampai_44_tahun: val(value.jumlahKasusBaruPasienUmur40TahunSampai44TahunL),
+        jumlah_P_40_sampai_44_tahun: val(value.jumlahKasusBaruPasienUmur40TahunSampai44TahunP),
+        jumlah_L_45_sampai_49_tahun: val(value.jumlahKasusBaruPasienUmur45TahunSampai49TahunL),
+        jumlah_P_45_sampai_49_tahun: val(value.jumlahKasusBaruPasienUmur45TahunSampai49TahunP),
+        jumlah_L_50_sampai_54_tahun: val(value.jumlahKasusBaruPasienUmur50TahunSampai54TahunL),
+        jumlah_P_50_sampai_54_tahun: val(value.jumlahKasusBaruPasienUmur50TahunSampai54TahunP),
+        jumlah_L_55_sampai_59_tahun: val(value.jumlahKasusBaruPasienUmur55TahunSampai59TahunL),
+        jumlah_P_55_sampai_59_tahun: val(value.jumlahKasusBaruPasienUmur55TahunSampai59TahunP),
+        jumlah_L_60_sampai_64_tahun: val(value.jumlahKasusBaruPasienUmur60TahunSampai64TahunL),
+        jumlah_P_60_sampai_64_tahun: val(value.jumlahKasusBaruPasienUmur60TahunSampai64TahunP),
+        jumlah_L_65_sampai_69_tahun: val(value.jumlahKasusBaruPasienUmur65TahunSampai69TahunL),
+        jumlah_P_65_sampai_69_tahun: val(value.jumlahKasusBaruPasienUmur65TahunSampai69TahunP),
+        jumlah_L_70_sampai_74_tahun: val(value.jumlahKasusBaruPasienUmur70TahunSampai74TahunL),
+        jumlah_P_70_sampai_74_tahun: val(value.jumlahKasusBaruPasienUmur70TahunSampai74TahunP),
+        jumlah_L_75_sampai_79_tahun: val(value.jumlahKasusBaruPasienUmur75TahunSampai79TahunL),
+        jumlah_P_75_sampai_79_tahun: val(value.jumlahKasusBaruPasienUmur75TahunSampai79TahunP),
+        jumlah_L_80_sampai_84_tahun: val(value.jumlahKasusBaruPasienUmur80TahunSampai84TahunL),
+        jumlah_P_80_sampai_84_tahun: val(value.jumlahKasusBaruPasienUmur80TahunSampai84TahunP),
+        jumlah_L_diatas_85_tahun: val(value.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunL),
+        jumlah_P_diatas_85_tahun: val(value.jumlahKasusBaruPasienUmurLebihDariAtauSamaDengan85TahunP),
         jumlah_kasus_baru_L: totalL,
         jumlah_kasus_baru_P: totalP,
         total_kasus_baru: total,
-        jumlah_kunjungan_L: val(item.jumlahKunjunganPasienL),
-        jumlah_kunjungan_P: val(item.jumlahKunjunganPasienP),
+        jumlah_kunjungan_L: val(value.jumlahKunjunganPasienL),
+        jumlah_kunjungan_P: val(value.jumlahKunjunganPasienP),
         total_jumlah_kunjungan: totalkunjungan,
-      });
-    });
+    };
 
-    if (errorsIcd.length) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi ICD gagal",
-        errors: errorsIcd,
-      });
-    }
-
-    if (relErrors.length) {
-      return res.status(400).send({
-        status: false,
-        message: "Validasi total gagal",
-        errors: relErrors,
-      });
-    }
-
+    
     let transaction;
     try {
       transaction = await databaseSIRS.transaction();
-
-      for (const item of toUpdate) {
-        await rlLimaTitikSatuDetail.update(item, {
-          where: { id: item.id },
-          transaction,
-        });
-      }
+      await rlLimaTitikSatuDetail.update(updateObj, { where: { id }, transaction });
       await transaction.commit();
+
       return res.status(200).send({
         status: true,
         message: "Data updated successfully",
-        data: { updated: toUpdate.length },
+        data: { id },
       });
     } catch (err) {
-      console.log(err);
       if (transaction) await transaction.rollback();
+      console.log(err);
       return res.status(400).send({
         status: false,
         message: "Failed to update data.",
       });
     }
   } catch (err) {
+    console.log(err);
     return res.status(400).send({
       status: false,
       message: "Failed to process update.",
@@ -2342,61 +2249,48 @@ export const updateDataRLLimaTitikSatuExternal = async (req, res) => {
 };
 
 export const deleteDataRLLimaTitikSatuExternal = async (req, res) => {
-   const schema = Joi.object({
-    dataId: Joi.array()
-      .items(
-        Joi.Number().integer().required()
-      )
-      .required(),
-  });
 
-  const { error, value } = schema.validate(req.body);
-  if (error) {
-    res.status(404).send({
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).send({
       status: false,
-      message: error.details[0].message,
+      message: "Parameter id tidak valid",
     });
-    return;
   }
-   const idsToDelete = req.body.dataId.map((v) => Number(v));
+
   let transaction;
-   try {
+  try {
     transaction = await databaseSIRS.transaction();
 
-    const rows = await rlLimaTitikSatuDetail.findAll({
-      where: { id: { [Op.in]: idsToDelete } },
-      attributes: ['id', 'rs_id'],
+    const row = await rlLimaTitikSatuDetail.findOne({
+      where: { id },
+      attributes: ["id", "rs_id"],
       raw: true,
       transaction,
+      // lock: transaction.LOCK.UPDATE, 
     });
 
-    const foundIds = rows.map(r => Number(r.id));
-    const missingIds = idsToDelete.filter(id => !foundIds.includes(id));
-
-    if (missingIds.length > 0) {
+    if (!row) {
       await transaction.rollback();
       return res.status(404).send({
         status: false,
         message: "Data tidak ditemukan",
-        missingIds,
+        id,
       });
     }
 
-    const notOwned = rows.filter(r => Number(r.rs_id) !== Number(req.user.satKerId));
-    if (notOwned.length > 0) {
+    if (Number(row.rs_id) !== Number(req.user.satKerId)) {
       await transaction.rollback();
       return res.status(403).send({
         status: false,
-        message: "Beberapa data bukan milik RS Anda",
-        details: notOwned.map(r => ({ id: r.id, rs_id: r.rs_id })),
+        message: "Data bukan milik RS Anda",
+        id,
+        rs_id: row.rs_id,
       });
     }
 
     const deletedCount = await rlLimaTitikSatuDetail.destroy({
-      where: {
-        id: { [Op.in]: idsToDelete },
-        rs_id: req.user.satKerId,
-      },
+      where: { id, rs_id: req.user.satKerId },
       transaction,
     });
 
@@ -2405,23 +2299,24 @@ export const deleteDataRLLimaTitikSatuExternal = async (req, res) => {
       return res.status(200).send({
         status: true,
         message: "Data berhasil dihapus",
-        data: { deleted_rows: deletedCount, requested_ids: idsToDelete },
+        data: { deleted_rows: deletedCount, id },
       });
     } else {
       await transaction.rollback();
       return res.status(500).send({
         status: false,
         message: "Gagal menghapus data.",
+        id,
       });
     }
   } catch (err) {
     if (transaction) {
-      try { await transaction.rollback(); } catch (e) { /* ignore */ }
+      try { await transaction.rollback(); } catch (e) { console.log(err) }
     }
-    console.error("deleteManyRLEmpatTitikSatuExternal error:", err);
+    console.error("deleteDataRLLimaTitikSatuExternal error:", err);
     return res.status(500).send({
       status: false,
-      message: "Terjadi kesalahan pada server saat memproses penghapusan.",
+      message: "Terjadi kesalahan saat menghapus data.",
       error: err?.message || err,
     });
   }

@@ -1256,23 +1256,23 @@ router.post(
 
 //4.1 Bridging Update
 router.patch(
-  "/apisirs6v2/external/rlempattitiksatu",
+  "/apisirs6v2/external/rlempattitiksatu/:id",
   verifyTokenBridge,
   updateDataRLEmpatTitikSatuExternal
 );
 
 //5.1 Bridging Update
 router.patch(
-  "/apisirs6v2/external/rllimatitiksatu",
+  "/apisirs6v2/external/rllimatitiksatu/:id",
   verifyTokenBridge,
   updateDataRLLimaTitikSatuExternal
 );
 
 //4.1 Bridging Delete
-router.delete("/apisirs6v2/external/rlempattitiksatu", verifyTokenBridge, deleteDataRLEmpatTitikSatuExternal);
+router.delete("/apisirs6v2/external/rlempattitiksatu/:id", verifyTokenBridge, deleteDataRLEmpatTitikSatuExternal);
 
 //5.1 Bridging Delete
-router.delete("/apisirs6v2/external/rllimatitiksatu", verifyTokenBridge, deleteDataRLLimaTitikSatuExternal);
+router.delete("/apisirs6v2/external/rllimatitiksatu/:id", verifyTokenBridge, deleteDataRLLimaTitikSatuExternal);
 
 
 
