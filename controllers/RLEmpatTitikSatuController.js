@@ -832,6 +832,7 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
         return {
           id: result.id,
           periode: result.periode,
+           icd10: result.icd.icd_code,
           jumlahPasienHidupDanMatiUmurKurangDari1JamL: result.jmlh_pas_hidup_mati_umur_gen_0_1jam_l,
           jumlahPasienHidupDanMatiUmurKurangDari1JamP: result.jmlh_pas_hidup_mati_umur_gen_0_1jam_p,
           jumlahPasienHidupDanMatiUmur1JamSampai23JamL: result.jmlh_pas_hidup_mati_umur_gen_1_23jam_l,
@@ -885,8 +886,8 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
           jumlahPasienKeluarDanMatiL: result.jmlh_pas_keluar_mati_gen_l,
           jumlahPasienKeluarDanMatiP: result.jmlh_pas_keluar_mati_gen_p,
           totalPasienHidupMati: result.total_pas_hidup_mati,
-          totalPasienKeluarMati: result.total_pas_keluar_mati,
-          icdCode: result.icd.icd_code
+          totalPasienKeluarMati: result.total_pas_keluar_mati
+         
         };
       });
 
@@ -904,6 +905,7 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
       return;
     });
 };
+
 
 export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
   const schema = Joi.object({
