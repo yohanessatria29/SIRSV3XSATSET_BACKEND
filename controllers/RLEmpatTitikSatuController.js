@@ -753,19 +753,10 @@ export const deleteDataRLEmpatTitikSatu = async (req, res) => {
 
 export const getDataRLEmpatTitikSatuExternal = (req, res) => {
 
-  // let whereClause = {}
-
-  //   if(req.query.rsId != req.user.satKerId){
-  //     res.status(404).send({
-  //       status: false,
-  //       message: "Kode RS Tidak Sesuai",
-  //     });
-  //     return;
-  //   }
   const whereClause = {
     rs_id: req.user.satKerId,
     periode: req.query.periode,
-  }
+  };
 
   rlEmpatTitikSatuDetail
     .findAll({
@@ -773,7 +764,10 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
         model: icd,
         attributes: ["id", "icd_code", "description_code", "icd_code_group", "description_code_group"],
       },
-      attributes: ["id", "periode", "jmlh_pas_hidup_mati_umur_gen_0_1jam_l",
+      attributes: [
+        "id", 
+        "periode",
+        "jmlh_pas_hidup_mati_umur_gen_0_1jam_l",
         "jmlh_pas_hidup_mati_umur_gen_0_1jam_p",
         "jmlh_pas_hidup_mati_umur_gen_1_23jam_l",
         "jmlh_pas_hidup_mati_umur_gen_1_23jam_p",
@@ -828,14 +822,79 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
         "jmlh_pas_keluar_mati_gen_l",
         "jmlh_pas_keluar_mati_gen_p",
         "total_pas_hidup_mati",
-        "total_pas_keluar_mati"],
+        "total_pas_keluar_mati",
+      ],
       where: whereClause,
     })
     .then((results) => {
+      // Mapping response data
+      const modifiedResults = results.map(result => {
+        return {
+          id: result.id,
+          periode: result.periode,
+           icd10: result.icd.icd_code,
+          jumlahPasienHidupDanMatiUmurKurangDari1JamL: result.jmlh_pas_hidup_mati_umur_gen_0_1jam_l,
+          jumlahPasienHidupDanMatiUmurKurangDari1JamP: result.jmlh_pas_hidup_mati_umur_gen_0_1jam_p,
+          jumlahPasienHidupDanMatiUmur1JamSampai23JamL: result.jmlh_pas_hidup_mati_umur_gen_1_23jam_l,
+          jumlahPasienHidupDanMatiUmur1JamSampai23JamP: result.jmlh_pas_hidup_mati_umur_gen_1_23jam_p,
+          jumlahPasienHidupDanMatiUmur1HariSampai7HariL: result.jmlh_pas_hidup_mati_umur_gen_1_7hr_l,
+          jumlahPasienHidupDanMatiUmur1HariSampai7HariP: result.jmlh_pas_hidup_mati_umur_gen_1_7hr_p,
+          jumlahPasienHidupDanMatiUmur8HariSampai28HariL: result.jmlh_pas_hidup_mati_umur_gen_8_28hr_l,
+          jumlahPasienHidupDanMatiUmur8HariSampai28HariP: result.jmlh_pas_hidup_mati_umur_gen_8_28hr_p,
+          jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanL: result.jmlh_pas_hidup_mati_umur_gen_29hr_3bln_l,
+          jumlahPasienHidupDanMatiUmur2HariSampai9Hari3BulanP: result.jmlh_pas_hidup_mati_umur_gen_29hr_3bln_p,
+          jumlahPasienHidupDanMatiUmur3BulanSampai6BulanL: result.jmlh_pas_hidup_mati_umur_gen_3_6bln_l,
+          jumlahPasienHidupDanMatiUmur3BulanSampai6BulanP: result.jmlh_pas_hidup_mati_umur_gen_3_6bln_p,
+          jumlahPasienHidupDanMatiUmur6BulanSampai11BulanL: result.jmlh_pas_hidup_mati_umur_gen_6_11bln_l,
+          jumlahPasienHidupDanMatiUmur6BulanSampai11BulanP: result.jmlh_pas_hidup_mati_umur_gen_6_11bln_p,
+          jumlahPasienHidupDanMatiUmur1TahunSampai4tTahun: result.jmlh_pas_hidup_mati_umur_gen_1_4th_l,
+          jumlahPasienHidupDanMatiUmur5TahunSampai9tTahun: result.jmlh_pas_hidup_mati_umur_gen_5_9th_l,
+          jumlahPasienHidupDanMatiUmur10TahunSampai14TahunL: result.jmlh_pas_hidup_mati_umur_gen_10_14th_l,
+          jumlahPasienHidupDanMatiUmur10TahunSampai14TahunP: result.jmlh_pas_hidup_mati_umur_gen_10_14th_p,
+          jumlahPasienHidupDanMatiUmur15TahunSampai19TahunL: result.jmlh_pas_hidup_mati_umur_gen_15_19th_l,
+          jumlahPasienHidupDanMatiUmur15TahunSampai19TahunP: result.jmlh_pas_hidup_mati_umur_gen_15_19th_p,
+          jumlahPasienHidupDanMatiUmur20TahunSampai24TahunL: result.jmlh_pas_hidup_mati_umur_gen_20_24th_l,
+          jumlahPasienHidupDanMatiUmur20TahunSampai24TahunP: result.jmlh_pas_hidup_mati_umur_gen_20_24th_p,
+          jumlahPasienHidupDanMatiUmur25TahunSampai29TahunL: result.jmlh_pas_hidup_mati_umur_gen_25_29th_l,
+          jumlahPasienHidupDanMatiUmur25TahunSampai29TahunP: result.jmlh_pas_hidup_mati_umur_gen_25_29th_p,
+          jumlahPasienHidupDanMatiUmur30TahunSampai34TahunL: result.jmlh_pas_hidup_mati_umur_gen_30_34th_l,
+          jumlahPasienHidupDanMatiUmur30TahunSampai34TahunP: result.jmlh_pas_hidup_mati_umur_gen_30_34th_p,
+          jumlahPasienHidupDanMatiUmur35TahunSampai39TahunL: result.jmlh_pas_hidup_mati_umur_gen_35_39th_l,
+          jumlahPasienHidupDanMatiUmur35TahunSampai39TahunP: result.jmlh_pas_hidup_mati_umur_gen_35_39th_p,
+          jumlahPasienHidupDanMatiUmur40TahunSampai44TahunL: result.jmlh_pas_hidup_mati_umur_gen_40_44th_l,
+          jumlahPasienHidupDanMatiUmur40TahunSampai44TahunP: result.jmlh_pas_hidup_mati_umur_gen_40_44th_p,
+          jumlahPasienHidupDanMatiUmur45TahunSampai49TahunL: result.jmlh_pas_hidup_mati_umur_gen_45_49th_l,
+          jumlahPasienHidupDanMatiUmur45TahunSampai49TahunP: result.jmlh_pas_hidup_mati_umur_gen_45_49th_p,
+          jumlahPasienHidupDanMatiUmur50TahunSampai54TahunL: result.jmlh_pas_hidup_mati_umur_gen_50_54th_l,
+          jumlahPasienHidupDanMatiUmur50TahunSampai54TahunP: result.jmlh_pas_hidup_mati_umur_gen_50_54th_p,
+          jumlahPasienHidupDanMatiUmur55TahunSampai59TahunL: result.jmlh_pas_hidup_mati_umur_gen_55_59th_l,
+          jumlahPasienHidupDanMatiUmur55TahunSampai59TahunP: result.jmlh_pas_hidup_mati_umur_gen_55_59th_p,
+          jumlahPasienHidupDanMatiUmur60TahunSampai64TahunL: result.jmlh_pas_hidup_mati_umur_gen_60_64th_l,
+          jumlahPasienHidupDanMatiUmur60TahunSampai64TahunP: result.jmlh_pas_hidup_mati_umur_gen_60_64th_p,
+          jumlahPasienHidupDanMatiUmur65TahunSampai69TahunL: result.jmlh_pas_hidup_mati_umur_gen_65_69th_l,
+          jumlahPasienHidupDanMatiUmur65TahunSampai69TahunP: result.jmlh_pas_hidup_mati_umur_gen_65_69th_p,
+          jumlahPasienHidupDanMatiUmur70TahunSampai74TahunL: result.jmlh_pas_hidup_mati_umur_gen_70_74th_l,
+          jumlahPasienHidupDanMatiUmur70TahunSampai74TahunP: result.jmlh_pas_hidup_mati_umur_gen_70_74th_p,
+          jumlahPasienHidupDanMatiUmur75TahunSampai79TahunL: result.jmlh_pas_hidup_mati_umur_gen_75_79th_l,
+          jumlahPasienHidupDanMatiUmur75TahunSampai79TahunP: result.jmlh_pas_hidup_mati_umur_gen_75_79th_p,
+          jumlahPasienHidupDanMatiUmur80TahunSampai84TahunL: result.jmlh_pas_hidup_mati_umur_gen_80_84th_l,
+          jumlahPasienHidupDanMatiUmur80TahunSampai84TahunP: result.jmlh_pas_hidup_mati_umur_gen_80_84th_p,
+          jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunL: result.jmlh_pas_hidup_mati_umur_gen_lebih85th_l,
+          jumlahPasienHidupDanMatiUmurLebihDariAtauSamaDengan85TahunP: result.jmlh_pas_hidup_mati_umur_gen_lebih85th_p,
+          jumlahPasienHidupDanMatiL: result.jmlh_pas_hidup_mati_gen_l,
+          jumlahPasienHidupDanMatiP: result.jmlh_pas_hidup_mati_gen_p,
+          jumlahPasienKeluarDanMatiL: result.jmlh_pas_keluar_mati_gen_l,
+          jumlahPasienKeluarDanMatiP: result.jmlh_pas_keluar_mati_gen_p,
+          totalPasienHidupMati: result.total_pas_hidup_mati,
+          totalPasienKeluarMati: result.total_pas_keluar_mati
+         
+        };
+      });
+
       res.status(200).send({
         status: true,
         message: "data found",
-        data: results,
+        data: modifiedResults,
       });
     })
     .catch((err) => {
@@ -846,6 +905,7 @@ export const getDataRLEmpatTitikSatuExternal = (req, res) => {
       return;
     });
 };
+
 
 export const insertDataRLEmpatTitikSatuExternal = async (req, res) => {
   const schema = Joi.object({
