@@ -46,6 +46,7 @@ import {
   updateDataRLTigaTitikEmpat,
   deleteDataRLTigaTitikEmpat,
   getDataRLTigaTitikEmpatSatuSehat,
+  getDataRLTigaTitikEmpatSatusehatLocal,
 } from "../controllers/RLTigaTitikEmpatController.js";
 
 // RL 3.5
@@ -465,6 +466,12 @@ router.get(
   "/apisirs6v2/rltigatitikempatsatusehat",
   verifyToken,
   getDataRLTigaTitikEmpatSatuSehat
+);
+
+router.get(
+  "/apisirs6v2/getDataRLTigaTitikEmpatSatusehatLocal",
+  verifyToken,
+  getDataRLTigaTitikEmpatSatusehatLocal
 );
 
 router.get(
@@ -1269,11 +1276,17 @@ router.patch(
 );
 
 //4.1 Bridging Delete
-router.delete("/apisirs6v2/external/rlempattitiksatu/:id", verifyTokenBridge, deleteDataRLEmpatTitikSatuExternal);
+router.delete(
+  "/apisirs6v2/external/rlempattitiksatu/:id",
+  verifyTokenBridge,
+  deleteDataRLEmpatTitikSatuExternal
+);
 
 //5.1 Bridging Delete
-router.delete("/apisirs6v2/external/rllimatitiksatu/:id", verifyTokenBridge, deleteDataRLLimaTitikSatuExternal);
-
-
+router.delete(
+  "/apisirs6v2/external/rllimatitiksatu/:id",
+  verifyTokenBridge,
+  deleteDataRLLimaTitikSatuExternal
+);
 
 export default router;
