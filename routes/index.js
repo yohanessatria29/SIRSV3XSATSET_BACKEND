@@ -316,6 +316,7 @@ import {
   getDataRLLimaTitikSatuExternal,
   getDataRLLimaTitikSatuSatuSehatShowPaging,
   deleteDataRLLimaTitikSatuExternal,
+  getMasterumursatusehat,
 } from "../controllers/RLLimaTitikSatuController.js";
 
 // RL 3.14
@@ -1175,6 +1176,12 @@ router.get(
   "/apisirs6v2/rllimatitiksatusatusehatpage",
   verifyToken,
   getDataRLLimaTitikSatuSatuSehatShowPaging
+);
+
+router.get(
+  "/apisirs6v2/getMasterumursatusehat",
+  verifyToken,
+  getMasterumursatusehat
 );
 
 // RL 5.3
