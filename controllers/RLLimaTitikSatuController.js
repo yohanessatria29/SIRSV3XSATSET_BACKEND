@@ -409,6 +409,8 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
   }
 };
 
+// V1
+
 // export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
 //   const joi = Joi.extend(joiDate);
 //   const schema = joi.object({
@@ -558,6 +560,158 @@ export const getDataRLLimaTitikSatuSatuSehatShow = async (req, res) => {
 //   }
 // };
 
+// V2
+// export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
+//   const joi = Joi.extend(joiDate);
+//   const schema = joi.object({
+//     rsId: joi.string().required(),
+//     periode: joi
+//       .string()
+//       .pattern(/^\d{4}-\d{2}$/)
+//       .required(), // format YYYY-MM string
+//     page: joi.number().integer().min(1).default(1),
+//     limit: joi.number().integer().min(1).max(100).default(100),
+//   });
+
+//   const { error, value } = schema.validate(req.query);
+//   if (error) {
+//     return res.status(400).send({
+//       status: false,
+//       message: error.details[0].message,
+//     });
+//   }
+
+//   let koders;
+//   let periodeget;
+
+//   if (req.user.jenisUserId === 4) {
+//     if (req.query.rsId !== req.user.satKerId) {
+//       return res.status(403).send({
+//         status: false,
+//         message: "Kode RS Tidak Sesuai",
+//       });
+//     }
+//     koders = req.user.satKerId;
+//     periodeget = req.query.periode;
+//   } else {
+//     koders = req.query.rsId;
+//     periodeget = req.query.periode;
+//   }
+
+//   try {
+//     const satuSehat = await satu_sehat_id.findOne({
+//       where: { kode_baru_faskes: koders },
+//       attributes: ["organization_id"],
+//     });
+
+//     if (!satuSehat) {
+//       return res.status(404).send({
+//         status: false,
+//         message: "OrganizationId Tidak Ada",
+//       });
+//     }
+
+//     const organization_id = satuSehat.organization_id;
+//     const page = value.page;
+//     const limit = value.limit;
+//     const offset = (page - 1) * limit;
+
+//     const totalData = await rlLimaTitikSatuSatuSehat.count({
+//       where: {
+//         organization_id,
+//         periode: periodeget,
+//       },
+//     });
+
+//     const resultRaw = await rlLimaTitikSatuSatuSehat.findAll({
+//       where: {
+//         organization_id,
+//         periode: periodeget,
+//       },
+//       attributes: [
+//         "icd_10",
+//         "diagnosis",
+//         "periode",
+//         "male_new_cases",
+//         "females_new_cases",
+//         "total_new_cases",
+//         "male_visits",
+//         "female_visits",
+//         "total_visits",
+//         "age_id",
+//       ],
+//       include: [
+//         {
+//           model: AgeGroups,
+//           attributes: ["name"],
+//           required: false,
+//         },
+//         {
+//           model: satu_sehat_id,
+//           attributes: ["organization_id", "kode_baru_faskes"],
+//           required: false,
+//           include: [
+//             {
+//               model: users_sso,
+//               attributes: ["nama", "rs_id"],
+//               required: false,
+//             },
+//           ],
+//         },
+//       ],
+//       order: [
+//         ["icd_10", "ASC"],
+//         ["age_id", "ASC"],
+//       ],
+//       limit,
+//       offset,
+//     });
+
+//     if (resultRaw.length === 0) {
+//       return res.status(200).send({
+//         status: true,
+//         message: "data found",
+//         satu_sehat_id: null,
+//         data: [],
+//         pagination: {
+//           total: 0,
+//           page,
+//           limit,
+//           pages: 0,
+//         },
+//       });
+//     }
+
+//     // Ambil satu_sehat_id dan users_sso dari data pertama, jika ada
+//     const satuSehatData = resultRaw[0].satu_sehat_id ?? null;
+
+//     // Map ke plain object dan hapus properti satu_sehat_id untuk hindari duplikat
+//     const data = resultRaw.map((item) => {
+//       const plain = item.get({ plain: true });
+//       delete plain.satu_sehat_id;
+//       return plain;
+//     });
+
+//     res.status(200).send({
+//       status: true,
+//       message: "data found",
+//       satu_sehat_id: satuSehatData,
+//       data,
+//       pagination: {
+//         total: totalData,
+//         page,
+//         limit,
+//         pages: Math.ceil(totalData / limit),
+//       },
+//     });
+//   } catch (err) {
+//     res.status(500).send({
+//       status: false,
+//       message: err.message || "internal server error",
+//     });
+//   }
+// };
+
 export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
   const joi = Joi.extend(joiDate);
   const schema = joi.object({
@@ -565,7 +719,7 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
     periode: joi
       .string()
       .pattern(/^\d{4}-\d{2}$/)
-      .required(), // format YYYY-MM string
+      .required(), // format YYYY-MM
     page: joi.number().integer().min(1).default(1),
     limit: joi.number().integer().min(1).max(100).default(100),
   });
@@ -613,17 +767,50 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
     const limit = value.limit;
     const offset = (page - 1) * limit;
 
-    const totalData = await rlLimaTitikSatuSatuSehat.count({
+    // 1️⃣ Ambil ICD unik dulu
+    const icdList = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id,
         periode: periodeget,
       },
+      attributes: ["icd_10"],
+      group: ["icd_10"],
+      order: [["icd_10", "ASC"]],
+      limit,
+      offset,
+      raw: true,
     });
 
+    const icdCodes = icdList.map((item) => item.icd_10);
+
+    if (icdCodes.length === 0) {
+      return res.status(200).send({
+        status: true,
+        message: "data found",
+        satu_sehat_id: null,
+        data: [],
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          pages: 0,
+        },
+      });
+    }
+
+    // Hitung total ICD unik untuk pagination
+    const totalIcd = await rlLimaTitikSatuSatuSehat.count({
+      where: { organization_id, periode: periodeget },
+      distinct: true,
+      col: "icd_10",
+    });
+
+    // 2️⃣ Ambil data lengkap untuk ICD yang terpilih
     const resultRaw = await rlLimaTitikSatuSatuSehat.findAll({
       where: {
         organization_id,
         periode: periodeget,
+        icd_10: icdCodes,
       },
       attributes: [
         "icd_10",
@@ -660,48 +847,34 @@ export const getDataRLLimaTitikSatuSatuSehatShowPaging = async (req, res) => {
         ["icd_10", "ASC"],
         ["age_id", "ASC"],
       ],
-      limit,
-      offset,
+      subQuery: false,
     });
 
-    if (resultRaw.length === 0) {
-      return res.status(200).send({
-        status: true,
-        message: "data found",
-        satu_sehat_id: null,
-        data: [],
-        pagination: {
-          total: 0,
-          page,
-          limit,
-          pages: 0,
-        },
-      });
-    }
+    // Ambil satu_sehat_id dari data pertama (kalau ada)
+    const satuSehatData = resultRaw[0]?.satu_sehat_id ?? null;
 
-    // Ambil satu_sehat_id dan users_sso dari data pertama, jika ada
-    const satuSehatData = resultRaw[0].satu_sehat_id ?? null;
-
-    // Map ke plain object dan hapus properti satu_sehat_id untuk hindari duplikat
+    // Ubah ke plain object
     const data = resultRaw.map((item) => {
       const plain = item.get({ plain: true });
       delete plain.satu_sehat_id;
       return plain;
     });
 
+    // 3️⃣ Kirim response
     res.status(200).send({
       status: true,
       message: "data found",
       satu_sehat_id: satuSehatData,
       data,
       pagination: {
-        total: totalData,
+        total: totalIcd, // total ICD unik
         page,
         limit,
-        pages: Math.ceil(totalData / limit),
+        pages: Math.ceil(totalIcd / limit),
       },
     });
   } catch (err) {
+    console.error("Error:", err);
     res.status(500).send({
       status: false,
       message: err.message || "internal server error",
